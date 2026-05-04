@@ -1,3 +1,5 @@
+import { ThemeProvider } from './context/ThemeContext';
+import { LanguageProvider } from './context/LanguageContext';
 import { useState } from 'react';
 import { Sidebar } from './components/layout/Sidebar';
 import { Header } from './components/layout/Header';
@@ -12,9 +14,9 @@ import Meteo from './pages/Meteo';
 import Favoris from './pages/Favoris';
 import Evenements from './pages/Evenements';
 import Reglages from './pages/Reglages';
-import { C } from './theme/colors';
+import { lightTheme as C } from './theme/colors';
 
-function App() {
+function AppContent() {
   const [activePage, setActivePage] = useState('accueil');
 
   const renderPage = () => {
@@ -47,4 +49,12 @@ function App() {
   );
 }
 
-export default App;
+export default function App() {
+  return (
+    <ThemeProvider>
+      <LanguageProvider>
+        <AppContent />
+      </LanguageProvider>
+    </ThemeProvider>
+  );
+}

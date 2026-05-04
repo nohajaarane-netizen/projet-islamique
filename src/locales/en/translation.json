@@ -1,0 +1,14 @@
+{
+  "nav_accueil": "Home",
+  "nav_salat": "Prayer Tracker",
+  "nav_alhamd": "Alhamdulillah",
+  "nav_hadith": "Hadith & Du'a",
+  "nav_asma": "AsmaUlHusna",
+  "nav_horaires": "Prayer Times",
+  "nav_qibla": "Qibla",
+  "nav_meteo": "Weather",
+  "nav_favoris": "My Favorites",
+  "nav_evenements": "Events",
+  "nav_reglages": "Settings",
+  "welcome": "Assalamu alaykum 👋"
+}
