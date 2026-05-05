@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
-import { C } from '../theme/colors';
+import { useTheme } from '../context/ThemeContext';
+import { lightTheme, darkTheme } from '../theme/colors';
 import { EVENTS as defaultEvents } from '../data/events';
 
 export default function Evenements() {
+  const { theme } = useTheme();
+  const C = theme === 'light' ? lightTheme : darkTheme;
   const [events, setEvents] = useState(defaultEvents);
   const [showForm, setShowForm] = useState(false);
   const [newEvent, setNewEvent] = useState({ title: '', date: '', time: '', location: '' });
@@ -23,7 +26,7 @@ export default function Evenements() {
   };
 
   return (
-    <div style={{ maxWidth: 700, margin: '0 auto' }}>
+    <div style={{ maxWidth: 700, margin: '0 auto'  ,color: '#757575' }}>
       <div style={{ background: C.cardBg, borderRadius: 24, padding: 24, border: `1px solid ${C.border}` }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 20 }}>
           <h2 style={{ margin: 0, color: C.textDark }}>Événements</h2>

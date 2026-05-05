@@ -14,10 +14,14 @@ import Meteo from './pages/Meteo';
 import Favoris from './pages/Favoris';
 import Evenements from './pages/Evenements';
 import Reglages from './pages/Reglages';
-import { lightTheme as C } from './theme/colors';
+import { useTheme } from './context/ThemeContext';
+import { lightTheme, darkTheme } from './theme/colors';
 
+// Composant interne qui peut utiliser useTheme()
 function AppContent() {
   const [activePage, setActivePage] = useState('accueil');
+  const { theme } = useTheme();
+  const C = theme === 'light' ? lightTheme : darkTheme;
 
   const renderPage = () => {
     switch (activePage) {
@@ -49,6 +53,7 @@ function AppContent() {
   );
 }
 
+// Composant racine avec les providers
 export default function App() {
   return (
     <ThemeProvider>

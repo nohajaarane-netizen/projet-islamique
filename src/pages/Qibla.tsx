@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
-import { C } from '../theme/colors';
+import { useTheme } from '../context/ThemeContext';
+import { lightTheme, darkTheme } from '../theme/colors';
 import { QiblaCompass as CompassIcon } from '../components/layout/QiblaCompass';
 
 export default function Qibla() {
+    const { theme } = useTheme();
+  const C = theme === 'light' ? lightTheme : darkTheme;
   const [azimuth, setAzimuth] = useState(245); // direction fixe pour démo
   const [heading, setHeading] = useState(0);
   const [support, setSupport] = useState(true);

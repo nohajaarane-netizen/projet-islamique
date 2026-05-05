@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { C } from '../theme/colors';
-
+import { useTheme } from '../context/ThemeContext';
+import { lightTheme, darkTheme } from '../theme/colors';
 const hadiths = [
   { id: 1, arabic: "إِنَّمَا الْأَعْمَالُ بِالنِّيَّاتِ", french: "Les actions ne valent que par les intentions", source: "Sahih al-Bukhari (1)" },
   { id: 2, arabic: "مَنْ دَلَّ عَلَى خَيْرٍ فَلَهُ مِثْلُ أَجْرِ فَاعِلِهِ", french: "Celui qui guide vers un bien aura la récompense de celui qui l'accomplit", source: "Sahih Muslim (1893)" },
@@ -13,6 +13,8 @@ const duas = [
 ];
 
 export default function HadithDua() {
+  const { theme } = useTheme();
+  const C = theme === 'light' ? lightTheme : darkTheme;
   const [search, setSearch] = useState('');
   const [activeTab, setActiveTab] = useState<'hadiths' | 'duas' | 'asma'>('hadiths');
 

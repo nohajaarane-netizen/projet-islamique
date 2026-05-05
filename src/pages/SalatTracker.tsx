@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { C } from '../theme/colors';
+import { useTheme } from '../context/ThemeContext';
+import { lightTheme, darkTheme } from '../theme/colors';
 
 interface Prayer {
   name: string;
@@ -16,6 +17,8 @@ const defaultPrayers: Prayer[] = [
 ];
 
 export default function SalatTracker() {
+  const { theme } = useTheme();
+  const C = theme === 'light' ? lightTheme : darkTheme; 
   const [prayers, setPrayers] = useState<Prayer[]>(() => {
     const saved = localStorage.getItem('salatTracker');
     return saved ? JSON.parse(saved) : defaultPrayers;
@@ -48,7 +51,7 @@ export default function SalatTracker() {
   const completedCount = prayers.filter(p => p.completed).length;
 
   return (
-    <div style={{ maxWidth: 600, margin: '0 auto' }}>
+    <div style={{ maxWidth: 600, margin: '0 auto' , color: '#6b6b6b' }}>
       <div style={{ background: C.cardBg, borderRadius: 24, padding: 24, border: `1px solid ${C.border}` }}>
         <h2 style={{ marginBottom: 8, color: C.textDark }}>SalatTracker</h2>
         <p style={{ marginBottom: 20, color: C.textMid }}>Suivez vos prières quotidiennes</p>

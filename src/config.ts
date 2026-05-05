@@ -5,4 +5,5 @@ export const config = {
   DEFAULT_COUNTRY: "MA",
   KAABA_LAT: 21.4225,
   KAABA_LON: 39.8262,
+  DEFAULT_LANG: "fr",        // ajouté depuis l’autre version
 };

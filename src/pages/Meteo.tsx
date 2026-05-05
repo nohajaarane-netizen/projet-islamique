@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
-import { C } from '../theme/colors';
-
+import { useTheme } from '../context/ThemeContext';
+import { lightTheme, darkTheme } from '../theme/colors';
 export default function Meteo() {
+  const { theme } = useTheme();
+  const C = theme === 'light' ? lightTheme : darkTheme;
   const [weather, setWeather] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -37,21 +39,21 @@ export default function Meteo() {
         <h2 style={{ marginBottom: 8, color: C.textDark }}>Météo</h2>
         <p style={{ marginBottom: 20, color: C.textMid }}>{weather.city}, {weather.country}</p>
 
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 ,color: '#bcbcbc'  }}>
           <div style={{ fontSize: 60 }}>{weather.icon}</div>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 48, fontWeight: 700 }}>{weather.temp}°C</div>
+            <div style={{ fontSize: 48, fontWeight: 700 ,color: '#757575'}}>{weather.temp}°C</div>
             <div>{weather.condition}</div>
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 24 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 24 , color: '#757575'  }}>
           <div><strong>Ressenti</strong><br />{weather.feelsLike}°C</div>
           <div><strong>Humidité</strong><br />{weather.humidity}%</div>
           <div><strong>Vent</strong><br />{weather.wind} km/h</div>
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: `1px solid ${C.border}`, paddingTop: 16 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: `1px solid ${C.border}`, paddingTop: 16 , color: '#757575' }}>
           {weather.forecast.map(f => (
             <div key={f.day} style={{ textAlign: 'center' }}>
               <div style={{ fontWeight: 600 }}>{f.day}</div>

@@ -1,6 +1,7 @@
 import { useCountdown } from '../hooks/useCountdown';
 import { QiblaCompass } from '../components/layout/QiblaCompass';
-import { C } from '../theme/colors';
+import { useTheme } from '../context/ThemeContext';
+import { lightTheme, darkTheme } from '../theme/colors';
 import { PRAYER_TIMES } from '../data/prayerTimes';
 import { STAT_CARDS } from '../data/statCards';
 import { SPIRITUAL_TOOLS } from '../data/spiritualTools';
@@ -8,19 +9,23 @@ import { EVENTS } from '../data/events';
 import { HADITH_OF_DAY } from '../data/hadiths';
 
 export default function Accueil() {
+  const { theme } = useTheme();
+  const C = theme === 'light' ? lightTheme : darkTheme;
   const countdown = useCountdown(2 * 3600 + 52 * 60 + 34);
 
   const cardStyle = (extra?: React.CSSProperties) => ({
     background: C.cardBg,
     border: `1px solid ${C.border}`,
     borderRadius: "14px",
-    boxShadow: "0 1px 8px rgba(0,0,0,0.05)",
+    boxShadow: theme === 'light'
+      ? "0 1px 8px rgba(0,0,0,0.05)"
+      : "0 4px 12px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05)",
     ...extra,
   });
 
   return (
     <div style={{ fontFamily: "'Segoe UI','Helvetica Neue',sans-serif", color: C.textDark }}>
-      {/* Hero */}
+      {/* Hero avec fond dégradé – reste comme avant */}
       <div style={{ ...cardStyle(), marginBottom: "18px", display: "grid", gridTemplateColumns: "1fr 210px 190px", overflow: "hidden" }}>
         <div style={{ background: "linear-gradient(140deg,#173322 0%,#2A5040 50%,#173322 100%)", padding: "30px 26px", position: "relative", minHeight: "185px", display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
           <p style={{ margin: "0 0 5px", fontSize: "13px", color: "rgba(232,204,100,0.9)" }}>Assalamu alaykum 👋</p>
@@ -54,7 +59,7 @@ export default function Accueil() {
         </div>
       </div>
 
-      {/* Stats */}
+      {/* Statistiques */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: "12px", marginBottom: "18px" }}>
         {STAT_CARDS.map((s, i) => (
           <div key={i} style={{ ...cardStyle({ padding: "15px 16px" }) }}>
@@ -182,7 +187,9 @@ export default function Accueil() {
             <p style={{ margin: "0 0 1px", fontSize: "12px", fontWeight: 600 }}>Ar-Rahman</p>
             <p style={{ margin: 0, fontSize: "10.5px", color: C.textMid }}>Le Tout Miséricordieux</p>
           </div>
-          <button style={{ width: "100%", padding: "9px", background: C.green, border: "none", borderRadius: "8px", color: "white", fontSize: "11.5px", fontWeight: 600, cursor: "pointer" }}>Voir la liste complète</button>
+          <button style={{ width: "100%", padding: "9px", background: C.green, border: "none", borderRadius: "8px", color: "white", fontSize: "11.5px", fontWeight: 600, cursor: "pointer" }}>
+            Voir la liste complète
+          </button>
         </div>
       </div>
     </div>

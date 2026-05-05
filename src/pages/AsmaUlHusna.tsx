@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { C } from '../theme/colors';
-
+import { useTheme } from '../context/ThemeContext';
+import { lightTheme, darkTheme } from '../theme/colors';
 // Premiers noms (vous pouvez étendre à 99)
 const allNames = [
   { id: 1, name: 'اللَّه', translit: 'Allah', meaning: 'Le Nom d\'Allah' },
@@ -16,6 +16,8 @@ const allNames = [
 ];
 
 export default function AsmaUlHusna() {
+  const { theme } = useTheme();
+  const C = theme === 'light' ? lightTheme : darkTheme;
   const [learned, setLearned] = useState<number[]>(() => {
     const saved = localStorage.getItem('asmaLearned');
     return saved ? JSON.parse(saved) : [];

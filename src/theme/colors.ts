@@ -13,21 +13,25 @@ export const lightTheme = {
   greenLight:   "#52B788",
   border:       "#EAE4D8",
 };
-
 export const darkTheme = {
   pageBg:       "#121212",
   sidebar:      "#1e2a2a",
   sidebarBorder:"rgba(255,255,255,0.1)",
   cardBg:       "#1E1E1E",
   cardBg2:      "#2C2C2C",
-  textDark:     "#E0E0E0",
-  textMid:      "#B0B0B0",
-  textLight:    "#808080",
-  textSidebar:  "#A0C0A0",
-  gold:         "#D4AF37",
-  green:        "#2E7D32",
-  greenLight:   "#4CAF50",
-  border:       "#3A3A3A",
-};
 
+  // Textes – tons chauds et doux
+  textDark:     "#F9F9F9",        // blanc cassé, moins agressif que #FFFFFF
+  textMid:      "#CBCBCB",        // gris clair légèrement chaud
+  textLight:    "#8E8E8E",        // gris moyen pour les infos secondaires
+
+  textSidebar:  "#B8D0B8",        // vert pâle légèrement plus doux
+
+  gold:         "#F5C542",        // or un peu plus chaud
+  green:        "#344a3b",        // vert néon doux
+  greenLight:   "#2e553c",
+
+  border:       "#090707",
+};
+// Compatibilité avec l’ancien code qui utilise `C`
 export const C = lightTheme;
