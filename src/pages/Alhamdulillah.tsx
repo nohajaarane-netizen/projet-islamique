@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '../context/ThemeContext';
 import { lightTheme, darkTheme } from '../theme/colors';
+
 interface Gratitude {
   id: string;
   text: string;
@@ -11,8 +13,10 @@ interface Gratitude {
 const categories = ['Allāh', 'Foi', 'Famille', 'Santé', 'Travail', 'Autre'];
 
 export default function Alhamdulillah() {
+  const { t } = useTranslation();
   const { theme } = useTheme();
   const C = theme === 'light' ? lightTheme : darkTheme;
+
   const [gratitudes, setGratitudes] = useState<Gratitude[]>(() => {
     const saved = localStorage.getItem('gratitudes');
     return saved ? JSON.parse(saved) : [];
@@ -53,23 +57,30 @@ export default function Alhamdulillah() {
   return (
     <div style={{ maxWidth: 800, margin: '0 auto' }}>
       <div style={{ background: C.cardBg, borderRadius: 24, padding: 24, border: `1px solid ${C.border}` }}>
-        <h2 style={{ marginBottom: 8, color: C.textDark }}>Alhamdulillah</h2>
-        <p style={{ marginBottom: 20, color: C.textMid }}>Cultivez la gratitude au quotidien.</p>
+        <h2 style={{ marginBottom: 8, color: C.textDark }}>{t('alhamd.title')}</h2>
+        <p style={{ marginBottom: 20, color: C.textMid }}>{t('alhamd.subtitle')}</p>
 
         <div style={{ marginBottom: 24, background: C.cardBg2, borderRadius: 16, padding: 16 }}>
           <textarea
             value={newText}
             onChange={e => setNewText(e.target.value)}
-            placeholder="Aujourd'hui, je suis reconnaissant pour..."
+            placeholder={t('alhamd.placeholder')}
             rows={3}
-            style={{ width: '100%', padding: 12, borderRadius: 12, border: `1px solid ${C.border}`, fontFamily: 'inherit', resize: 'vertical' }}
+            style={{ width: '100%', padding: 12, borderRadius: 12, border: `1px solid ${C.border}`, fontFamily: 'inherit', resize: 'vertical', background: C.cardBg2, color: C.textDark }}
           />
           <div style={{ display: 'flex', gap: 12, marginTop: 12 }}>
-            <select value={category} onChange={e => setCategory(e.target.value)} style={{ padding: 8, borderRadius: 8, border: `1px solid ${C.border}` }}>
+            <select
+              value={category}
+              onChange={e => setCategory(e.target.value)}
+              style={{ padding: 8, borderRadius: 8, border: `1px solid ${C.border}`, background: C.cardBg2, color: C.textDark }}
+            >
               {categories.map(c => <option key={c}>{c}</option>)}
             </select>
-            <button onClick={addGratitude} style={{ background: C.green, border: 'none', borderRadius: 8, padding: '8px 20px', color: 'white', fontWeight: 600, cursor: 'pointer' }}>
-              Enregistrer
+            <button
+              onClick={addGratitude}
+              style={{ background: C.green, border: 'none', borderRadius: 8, padding: '8px 20px', color: 'white', fontWeight: 600, cursor: 'pointer' }}
+            >
+              {t('common.save')}
             </button>
           </div>
         </div>
@@ -77,11 +88,11 @@ export default function Alhamdulillah() {
         <div style={{ display: 'flex', gap: 16, marginBottom: 24 }}>
           <div style={{ background: C.cardBg2, padding: 12, borderRadius: 12, flex: 1, textAlign: 'center' }}>
             <div style={{ fontSize: 28, fontWeight: 700, color: C.green }}>{gratitudes.length}</div>
-            <div style={{ fontSize: 12, color: C.textMid }}>Total bénédictions</div>
+            <div style={{ fontSize: 12, color: C.textMid }}>{t('alhamd.total')}</div>
           </div>
           <div style={{ background: C.cardBg2, padding: 12, borderRadius: 12, flex: 1, textAlign: 'center' }}>
             <div style={{ fontSize: 28, fontWeight: 700, color: C.gold }}>{streak}</div>
-            <div style={{ fontSize: 12, color: C.textMid }}>Série actuelle (jours)</div>
+            <div style={{ fontSize: 12, color: C.textMid }}>{t('alhamd.streak')}</div>
           </div>
         </div>
 
@@ -89,13 +100,13 @@ export default function Alhamdulillah() {
           {gratitudes.map(g => (
             <div key={g.id} style={{ background: C.cardBg2, padding: 12, borderRadius: 12, borderLeft: `4px solid ${C.green}` }}>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <strong>{g.text}</strong>
+                <strong style={{ color: C.textDark }}>{g.text}</strong>
                 <span style={{ fontSize: 11, color: C.textLight }}>{g.date}</span>
               </div>
-              <div style={{ fontSize: 12, color: C.textMid }}>Catégorie : {g.category}</div>
+              <div style={{ fontSize: 12, color: C.textMid }}>{t('alhamd.category')} : {g.category}</div>
             </div>
           ))}
-          {gratitudes.length === 0 && <p style={{ textAlign: 'center', color: C.textLight }}>Aucune gratitude enregistrée. Commencez dès aujourd'hui !</p>}
+          {gratitudes.length === 0 && <p style={{ textAlign: 'center', color: C.textLight }}>{t('alhamd.empty')}</p>}
         </div>
       </div>
     </div>

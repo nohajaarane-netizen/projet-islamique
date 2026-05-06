@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '../hooks/useTheme';
 import { lightTheme, darkTheme } from '../theme/colors';
 import CompassIcon from '../components/layout/QiblaCompass';
 
 export default function Qibla() {
+  const { t } = useTranslation();
   const { theme } = useTheme();
   const C = theme === 'light' ? lightTheme : darkTheme;
   const [azimuth] = useState(245);
@@ -26,32 +28,30 @@ export default function Qibla() {
 
   const diff = (azimuth - heading + 360) % 360;
   const direction =
-    diff < 22.5 ? '⬆️ Nord' :
-    diff < 67.5 ? '↗️ Nord-Est' :
-    diff < 112.5 ? '➡️ Est' :
-    diff < 157.5 ? '↘️ Sud-Est' :
-    diff < 202.5 ? '⬇️ Sud' :
-    diff < 247.5 ? '↙️ Sud-Ouest' :
-    diff < 292.5 ? '⬅️ Ouest' :
-    diff < 337.5 ? '↖️ Nord-Ouest' : '⬆️ Nord';
+    diff < 22.5 ? t('qibla.north') :
+    diff < 67.5 ? t('qibla.north_east') :
+    diff < 112.5 ? t('qibla.east') :
+    diff < 157.5 ? t('qibla.south_east') :
+    diff < 202.5 ? t('qibla.south') :
+    diff < 247.5 ? t('qibla.south_west') :
+    diff < 292.5 ? t('qibla.west') :
+    diff < 337.5 ? t('qibla.north_west') : t('qibla.north');
 
   return (
     <div style={{ maxWidth: 500, margin: '0 auto' }}>
       <div style={{ background: C.cardBg, borderRadius: 24, padding: 24, border: `1px solid ${C.border}`, textAlign: 'center' }}>
-        <h2 style={{ marginBottom: 8, color: C.textDark }}>Boussole Qibla</h2>
-        <p style={{ marginBottom: 20, color: C.textMid }}>Trouvez la direction de la Kaaba.</p>
+        <h2 style={{ marginBottom: 8, color: C.textDark }}>{t('qibla.title')}</h2>
+        <p style={{ marginBottom: 20, color: C.textMid }}>{t('qibla.subtitle')}</p>
         <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'center' }}>
           <CompassIcon />
         </div>
         <div style={{ marginBottom: 16 }}>
-          <p style={{ fontSize: 24, fontWeight: 700 }}>{Math.round(diff)}°</p>
+          <p style={{ fontSize: 24, fontWeight: 700, color: C.textDark }}>{Math.round(diff)}°</p>
           <p style={{ fontSize: 18, color: C.green }}>{direction}</p>
         </div>
-        <p style={{ fontSize: 12, color: C.textLight }}>
-          Tournez votre appareil pour que l'aiguille verte pointe vers le sud-ouest (245°).
-        </p>
+        <p style={{ fontSize: 12, color: C.textLight }}>{t('qibla.instruction')}</p>
         {!support && (
-          <p style={{ color: 'red' }}>Orientation non supportée sur ce navigateur.</p>
+          <p style={{ color: 'red' }}>{t('qibla.unsupported')}</p>
         )}
       </div>
     </div>

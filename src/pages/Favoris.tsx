@@ -1,9 +1,13 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '../context/ThemeContext';
 import { lightTheme, darkTheme } from '../theme/colors';
+
 export default function Favoris() {
+  const { t } = useTranslation();
   const { theme } = useTheme();
   const C = theme === 'light' ? lightTheme : darkTheme;
+
   const [favorites, setFavorites] = useState<any[]>(() => {
     const saved = localStorage.getItem('favorites');
     return saved ? JSON.parse(saved) : [];
@@ -28,21 +32,29 @@ export default function Favoris() {
   return (
     <div style={{ maxWidth: 600, margin: '0 auto' }}>
       <div style={{ background: C.cardBg, borderRadius: 24, padding: 24, border: `1px solid ${C.border}` }}>
-        <h2 style={{ marginBottom: 8, color: C.textDark }}>Mes favoris</h2>
-        <p style={{ marginBottom: 20, color: C.textMid }}>Gardez vos invocations, hadiths ou noms préférés.</p>
+        <h2 style={{ marginBottom: 8, color: C.textDark }}>{t('favoris.title')}</h2>
+        <p style={{ marginBottom: 20, color: C.textMid }}>{t('favoris.subtitle')}</p>
 
         <div style={{ display: 'flex', gap: 12, marginBottom: 24 }}>
-          <input type="text" value={newFav} onChange={e => setNewFav(e.target.value)} placeholder="Nouveau favori..." style={{ flex: 1, padding: 12, borderRadius: 40, border: `1px solid ${C.border}` }} />
-          <button onClick={addFavorite} style={{ background: C.green, border: 'none', borderRadius: 40, padding: '0 20px', color: 'white', cursor: 'pointer' }}>Ajouter</button>
+          <input
+            type="text"
+            value={newFav}
+            onChange={e => setNewFav(e.target.value)}
+            placeholder={t('favoris.add_placeholder')}
+            style={{ flex: 1, padding: 12, borderRadius: 40, border: `1px solid ${C.border}`, background: C.cardBg2, color: C.textDark }}
+          />
+          <button onClick={addFavorite} style={{ background: C.green, border: 'none', borderRadius: 40, padding: '0 20px', color: 'white', cursor: 'pointer' }}>
+            {t('favoris.add_button')}
+          </button>
         </div>
 
         {favorites.map(f => (
           <div key={f.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 12, borderBottom: `1px solid ${C.border}` }}>
-            <span>{f.text}</span>
+            <span style={{ color: C.textDark }}>{f.text}</span>
             <button onClick={() => removeFavorite(f.id)} style={{ background: 'none', border: 'none', color: 'red', fontSize: 18, cursor: 'pointer' }}>🗑️</button>
           </div>
         ))}
-        {favorites.length === 0 && <p style={{ textAlign: 'center', color: C.textLight }}>Aucun favori. Ajoutez-en un !</p>}
+        {favorites.length === 0 && <p style={{ textAlign: 'center', color: C.textLight }}>{t('favoris.empty')}</p>}
       </div>
     </div>
   );
