@@ -1,5 +1,6 @@
 export const lightTheme = {
   pageBg:       "#F5F0E8",
+  headerBg: "#FFFFFF",    
   sidebar:      "#1C3828",
   sidebarBorder:"rgba(255,255,255,0.07)",
   cardBg:       "#FFFFFF",
@@ -15,6 +16,7 @@ export const lightTheme = {
 };
 export const darkTheme = {
   pageBg:       "#121212",
+  headerBg: "#1E1E1E",
   sidebar:      "#1e2a2a",
   sidebarBorder:"rgba(255,255,255,0.1)",
   cardBg:       "#1E1E1E",

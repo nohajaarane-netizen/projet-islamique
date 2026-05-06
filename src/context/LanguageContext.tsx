@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+
+import React, { createContext, useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
 type Language = 'fr' | 'en' | 'ar';
@@ -10,29 +11,30 @@ interface LanguageContextType {
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
-export const LanguageProvider = ({ children }: { children: ReactNode }) => {
+export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { i18n } = useTranslation();
   const [language, setLanguage] = useState<Language>(() => {
-    const saved = localStorage.getItem('language') as Language;
-    return saved || 'fr';
+    const saved = localStorage.getItem('language');
+    return (saved === 'en' || saved === 'ar' ? saved : 'fr') as Language;
   });
 
-  const changeLanguage = (lang: Language) => {
-    setLanguage(lang);
-    localStorage.setItem('language', lang);
-    i18n.changeLanguage(lang);
-    document.body.dir = lang === 'ar' ? 'rtl' : 'ltr';
-  };
+  useEffect(() => {
+    localStorage.setItem('language', language);
+    i18n.changeLanguage(language);
+    if (language === 'ar') {
+      document.body.dir = 'rtl';
+      document.body.classList.add('rtl');
+    } else {
+      document.body.dir = 'ltr';
+      document.body.classList.remove('rtl');
+    }
+  }, [language, i18n]);
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage: changeLanguage }}>
+    <LanguageContext.Provider value={{ language, setLanguage }}>
       {children}
     </LanguageContext.Provider>
   );
 };
 
-export const useLanguage = () => {
-  const ctx = useContext(LanguageContext);
-  if (!ctx) throw new Error('useLanguage must be used within LanguageProvider');
-  return ctx;
-};
+export { LanguageContext };
