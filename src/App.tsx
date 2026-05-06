@@ -1,8 +1,8 @@
 import { ThemeProvider } from './context/ThemeContext';
 import { LanguageProvider } from './context/LanguageContext';
 import { useState } from 'react';
-import { Sidebar } from './components/layout/Sidebar';
-import { Header } from './components/layout/Header';
+import  Sidebar  from './components/layout/Sidebar';
+import  Header  from './components/layout/Header';
 import Accueil from './pages/Accueil';
 import SalatTracker from './pages/SalatTracker';
 import Alhamdulillah from './pages/Alhamdulillah';

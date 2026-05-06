@@ -1,3 +1,5 @@
+import { To } from "react-router-dom";
+
 export interface PrayerTime {
   name: string;
   time: string;
@@ -31,6 +33,7 @@ export interface AppEvent {
 }
 
 export interface NavItem {
+  path: To;
   id: string;
   label: string;
   icon: string;

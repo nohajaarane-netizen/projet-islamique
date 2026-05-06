@@ -1,6 +1,7 @@
+import React from 'react';
 import { useCountdown } from '../hooks/useCountdown';
-import { QiblaCompass } from '../components/layout/QiblaCompass';
-import { useTheme } from '../context/ThemeContext';
+import QiblaCompass from '../components/layout/QiblaCompass';
+import { useTheme } from '../hooks/useTheme';
 import { lightTheme, darkTheme } from '../theme/colors';
 import { PRAYER_TIMES } from '../data/prayerTimes';
 import { STAT_CARDS } from '../data/statCards';
