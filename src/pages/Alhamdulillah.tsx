@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next'; 
 import { useTheme } from '../context/ThemeContext';
 import { lightTheme, darkTheme } from '../theme/colors';
 interface Gratitude {
@@ -13,6 +14,7 @@ const categories = ['Allāh', 'Foi', 'Famille', 'Santé', 'Travail', 'Autre'];
 export default function Alhamdulillah() {
   const { theme } = useTheme();
   const C = theme === 'light' ? lightTheme : darkTheme;
+  const { t } = useTranslation(); 
   const [gratitudes, setGratitudes] = useState<Gratitude[]>(() => {
     const saved = localStorage.getItem('gratitudes');
     return saved ? JSON.parse(saved) : [];

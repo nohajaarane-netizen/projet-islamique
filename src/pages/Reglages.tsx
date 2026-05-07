@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next'; 
 import { useTheme } from '../context/ThemeContext';
 import { lightTheme, darkTheme } from '../theme/colors';
 export default function Reglages() {
    const { theme } = useTheme();
   const C = theme === 'light' ? lightTheme : darkTheme;
+  const { t } = useTranslation(); 
   const [name, setName] = useState(() => localStorage.getItem('userName') || 'Mohamed');
   const [notifications, setNotifications] = useState(() => localStorage.getItem('notifications') === 'true');
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem('darkMode') === 'true');

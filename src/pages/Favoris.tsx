@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next'; 
 import { useTheme } from '../context/ThemeContext';
 import { lightTheme, darkTheme } from '../theme/colors';
 export default function Favoris() {
   const { theme } = useTheme();
   const C = theme === 'light' ? lightTheme : darkTheme;
+    const { t } = useTranslation(); 
   const [favorites, setFavorites] = useState<any[]>(() => {
     const saved = localStorage.getItem('favorites');
     return saved ? JSON.parse(saved) : [];

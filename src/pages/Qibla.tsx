@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTheme } from '../hooks/useTheme';
+import { useTranslation } from 'react-i18next'; 
 import { lightTheme, darkTheme } from '../theme/colors';
 import CompassIcon from '../components/layout/QiblaCompass';
 

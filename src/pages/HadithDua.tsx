@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next'; 
 import { useTheme } from '../context/ThemeContext';
 import { lightTheme, darkTheme } from '../theme/colors';
 const hadiths = [
@@ -16,6 +17,7 @@ export default function HadithDua() {
   const { theme } = useTheme();
   const C = theme === 'light' ? lightTheme : darkTheme;
   const [search, setSearch] = useState('');
+    const { t } = useTranslation(); 
   const [activeTab, setActiveTab] = useState<'hadiths' | 'duas' | 'asma'>('hadiths');
 
   const filteredHadiths = hadiths.filter(h => h.french.toLowerCase().includes(search.toLowerCase()) || h.arabic.includes(search));

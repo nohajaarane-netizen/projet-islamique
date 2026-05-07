@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next'; 
 import { useTheme } from '../context/ThemeContext';
 import { lightTheme, darkTheme } from '../theme/colors';
 
@@ -7,6 +8,7 @@ interface Prayer {
   time: string;
   completed: boolean;
 }
+
 
 const defaultPrayers: Prayer[] = [
   { name: 'Fajr', time: '05:15', completed: false },
@@ -18,7 +20,8 @@ const defaultPrayers: Prayer[] = [
 
 export default function SalatTracker() {
   const { theme } = useTheme();
-  const C = theme === 'light' ? lightTheme : darkTheme; 
+  const C = theme === 'light' ? lightTheme : darkTheme;
+  const { t } = useTranslation();  
   const [prayers, setPrayers] = useState<Prayer[]>(() => {
     const saved = localStorage.getItem('salatTracker');
     return saved ? JSON.parse(saved) : defaultPrayers;

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTheme } from '../context/ThemeContext';
+import { useTranslation } from 'react-i18next'; 
 import { lightTheme, darkTheme } from '../theme/colors';
 import { EVENTS as defaultEvents } from '../data/events';
 
@@ -7,6 +8,7 @@ export default function Evenements() {
   const { theme } = useTheme();
   const C = theme === 'light' ? lightTheme : darkTheme;
   const [events, setEvents] = useState(defaultEvents);
+  const { t } = useTranslation(); 
   const [showForm, setShowForm] = useState(false);
   const [newEvent, setNewEvent] = useState({ title: '', date: '', time: '', location: '' });
 

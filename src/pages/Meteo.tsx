@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useTheme } from '../context/ThemeContext';
+import { useTranslation } from 'react-i18next'; 
 import { lightTheme, darkTheme } from '../theme/colors';
 export default function Meteo() {
   const { theme } = useTheme();
   const C = theme === 'light' ? lightTheme : darkTheme;
+  const { t } = useTranslation(); 
   const [weather, setWeather] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 

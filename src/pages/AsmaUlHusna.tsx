@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTheme } from '../context/ThemeContext';
+import { useTranslation } from 'react-i18next'; 
 import { lightTheme, darkTheme } from '../theme/colors';
 // Premiers noms (vous pouvez étendre à 99)
 const allNames = [
@@ -18,6 +19,7 @@ const allNames = [
 export default function AsmaUlHusna() {
   const { theme } = useTheme();
   const C = theme === 'light' ? lightTheme : darkTheme;
+  const { t } = useTranslation(); 
   const [learned, setLearned] = useState<number[]>(() => {
     const saved = localStorage.getItem('asmaLearned');
     return saved ? JSON.parse(saved) : [];
