@@ -2,20 +2,31 @@ import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 
 /**
- * Fichier de configuration i18n.
- * Structure: resources.{langue}.translation.{clé}
- * Pour ajouter une nouvelle langue: copier une des sections (fr/en/ar) et adapter.
- * Pour modifier un texte: chercher la clé correspondante et éditer la valeur.
+ * FICHIER DE CONFIGURATION i18n
+ * 
+ * Structure :
+ *   resources.{langue}.translation.{section}.{sous-section}
+ * 
+ * Pour modifier un texte :
+ *   1. Trouver la clé correspondante (ex: "nav_accueil")
+ *   2. Changer la valeur dans la langue souhaitée (fr, en, ar)
+ * 
+ * Pour ajouter une nouvelle langue :
+ *   1. Copier tout le bloc d'une langue existante (par exemple "fr")
+ *   2. Renommer le code de la langue (ex: "es" pour espagnol)
+ *   3. Traduire toutes les valeurs
+ *   4. Ne pas modifier les clés (les parties à gauche du ":")
  */
+
 i18n.use(initReactI18next).init({
   resources: {
-    // ==================== FRANÇAIS ====================
+    // -------------------- FRANÇAIS --------------------
     fr: {
       translation: {
-        // ── Menu ──
+        // MENU PRINCIPAL
         nav_accueil: "Accueil",
         nav_salat: "SalatTracker",
-        nav_alhamd: "Alhamdulillah",
+        nav_alhamdulillah: "Alhamdulillah",
         nav_hadith: "Hadith & Du'a",
         nav_asma: "AsmaUlHusna",
         nav_horaires: "Horaires",
@@ -25,8 +36,8 @@ i18n.use(initReactI18next).init({
         nav_evenements: "Événements",
         nav_reglages: "Réglages",
 
-        // ── Page d'accueil (Hero) ──
-        welcome: "Assalamu alaykum 👋",
+        // PAGE D'ACCUEIL (Hero)
+        welcome: "Assalamu Alaykum !",
         hero_title: "Ta lumière spirituelle quotidienne",
         hero_desc: "Avance chaque jour vers Allah avec des outils pensés pour ton cœur et ton esprit.",
         btn_start: "▶ Commencer",
@@ -38,7 +49,7 @@ i18n.use(initReactI18next).init({
         direction: "Direction",
         my_position: "Ma position",
 
-        // ── Cartes statistiques (Accueil) ──
+        // CARTES STATISTIQUES
         stats: {
           prayers_today: "Prières aujourd'hui",
           current_streak: "Série actuelle",
@@ -50,7 +61,7 @@ i18n.use(initReactI18next).init({
           excellent: "Excellent"
         },
 
-        // ── Outils spirituels (Accueil) ──
+        // OUTILS SPIRITUELS
         tools: {
           salat_title: "SalatTracker",
           salat_desc: "Suis tes prières\net rappels intelligents",
@@ -62,10 +73,9 @@ i18n.use(initReactI18next).init({
           asma_desc: "Les 99 Noms d'Allah\net leurs significations"
         },
 
-        // ── Localisation ──
-        berrechid: "📍 Berrechid, Maroc",
+        berrechid: " Berrechid, Maroc",
 
-        // ── Événements (Accueil) ──
+        // ÉVÉNEMENTS
         event_dua_title: "Dua Tawwassoul",
         event_dua_date: "24 Mai 2025 • 17:30",
         event_dua_location: "Convention City",
@@ -76,7 +86,7 @@ i18n.use(initReactI18next).init({
         event_conf_date: "07 Juin 2025 • 10:00",
         event_conf_location: "Centre Culturel",
 
-        // ── Sections diverses (Accueil) ──
+        // SECTIONS GÉNÉRALES
         spiritual_tools: "Outils spirituels",
         see_all: "Voir tout",
         open: "Ouvrir",
@@ -93,7 +103,7 @@ i18n.use(initReactI18next).init({
         the_most_merciful: "Le Tout Miséricordieux",
         see_full_list: "Voir la liste complète",
 
-        // ── Jours de la semaine (pour Horaires) ──
+        // JOURS DE LA SEMAINE
         days: {
           saturday: "Samedi",
           sunday: "Dimanche",
@@ -104,7 +114,7 @@ i18n.use(initReactI18next).init({
           friday: "Vendredi"
         },
 
-        // ── SalatTracker (page dédiée) ──
+        // SALAT TRACKER
         salat: {
           title: "Suivi des prières",
           subtitle: "Suivez vos prières quotidiennes",
@@ -123,7 +133,7 @@ i18n.use(initReactI18next).init({
           isha: "Isha"
         },
 
-        // ── Alhamdulillah (page dédiée) ──
+        // ALHAMDULILLAH
         alhamd: {
           title: "Alhamdulillah",
           subtitle: "Cultivez la gratitude au quotidien.",
@@ -137,7 +147,7 @@ i18n.use(initReactI18next).init({
           empty: "Aucune gratitude enregistrée."
         },
 
-        // ── Hadith & Du'a (page dédiée) ──
+        // HADITH & DU'A
         hadith: {
           title: "Hadith & Du'a",
           subtitle: "Nourrissez votre cœur avec les paroles du Prophète et les invocations.",
@@ -149,14 +159,14 @@ i18n.use(initReactI18next).init({
           asma_placeholder: "Voir la page dédiée AsmaUlHusna pour les 99 noms."
         },
 
-        // ── AsmaUlHusna (page dédiée) ──
+        // ASMAUL HUSNA
         asma: {
           title: "AsmaUlHusna — Les 99 noms d'Allah",
           subtitle: "Apprenez et méditez les noms divins.",
           search_placeholder: "Rechercher un nom..."
         },
 
-        // ── Horaires (page dédiée) ──
+        // HORAIRES
         horaires: {
           title: "Horaires des prières",
           subtitle: "Planifiez votre journée autour des prières (Berrechid, Maroc)",
@@ -168,7 +178,7 @@ i18n.use(initReactI18next).init({
           isha: "Isha"
         },
 
-        // ── Qibla (page dédiée) ──
+        // QIBLA (avec nouvelles clés pour la boussole interactive)
         qibla: {
           title: "Direction de la Qibla",
           subtitle: "Trouvez la direction de la Kaaba.",
@@ -181,10 +191,14 @@ i18n.use(initReactI18next).init({
           west: "⬅️ Ouest",
           north_west: "↖️ Nord-Ouest",
           instruction: "Tournez votre appareil pour que l'aiguille verte pointe vers le sud-ouest (245°).",
-          unsupported: "Orientation non supportée sur ce navigateur."
+          unsupported: "Orientation non supportée sur ce navigateur.",
+          // Clés ajoutées pour la demande de permission (iOS)
+          permission_denied: "Permission refusée pour l'orientation",   // ✅ AJOUT
+          permission_error: "Erreur lors de la demande de permission",  // ✅ AJOUT
+          allow_permission: "Autoriser l'orientation"                   // ✅ AJOUT
         },
 
-        // ── Météo (page dédiée) ──
+        // MÉTÉO (toutes les clés utilisées dans Meteo.tsx sont ici)
         meteo: {
           title: "Météo",
           feels_like: "Ressenti",
@@ -201,7 +215,7 @@ i18n.use(initReactI18next).init({
           day_wed: "Mer"
         },
 
-        // ── Favoris (page dédiée) ──
+        // FAVORIS
         favoris: {
           title: "Mes favoris",
           subtitle: "Gardez vos invocations, hadiths ou noms préférés.",
@@ -210,7 +224,7 @@ i18n.use(initReactI18next).init({
           empty: "Aucun favori. Ajoutez-en un !"
         },
 
-        // ── Événements (page dédiée) ──
+        // ÉVÉNEMENTS
         evenements: {
           title: "Événements",
           add: "Ajouter",
@@ -221,7 +235,7 @@ i18n.use(initReactI18next).init({
           location_label: "Lieu"
         },
 
-        // ── Réglages (page dédiée) ──
+        // RÉGLAGES
         reglages: {
           title: "Réglages",
           name: "Nom complet",
@@ -230,7 +244,7 @@ i18n.use(initReactI18next).init({
           reset: "Réinitialiser toutes les données"
         },
 
-        // ── Mots communs utilisés partout ──
+        // TEXTES COMMUNS
         common: {
           save: "Enregistrer",
           cancel: "Annuler",
@@ -243,12 +257,12 @@ i18n.use(initReactI18next).init({
       }
     },
 
-    // ==================== ANGLAIS ====================
+    // -------------------- ANGLAIS --------------------
     en: {
       translation: {
         nav_accueil: "Home",
         nav_salat: "Prayer Tracker",
-        nav_alhamd: "Alhamdulillah",
+        nav_alhamdulillah: "Alhamdulillah",
         nav_hadith: "Hadith & Du'a",
         nav_asma: "AsmaUlHusna",
         nav_horaires: "Prayer Times",
@@ -320,7 +334,6 @@ i18n.use(initReactI18next).init({
         the_most_merciful: "The Most Merciful",
         see_full_list: "See full list",
 
-        // ── Jours de la semaine (anglais) ──
         days: {
           saturday: "Saturday",
           sunday: "Sunday",
@@ -402,7 +415,10 @@ i18n.use(initReactI18next).init({
           west: "⬅️ West",
           north_west: "↖️ North-West",
           instruction: "Turn your device to point the green needle towards south-west (245°).",
-          unsupported: "Orientation not supported on this browser."
+          unsupported: "Orientation not supported on this browser.",
+          permission_denied: "Orientation permission denied",       // ✅ AJOUT
+          permission_error: "Error requesting permission",          // ✅ AJOUT
+          allow_permission: "Allow orientation"                    // ✅ AJOUT
         },
 
         meteo: {
@@ -459,12 +475,12 @@ i18n.use(initReactI18next).init({
       }
     },
 
-    // ==================== ARABE ====================
+    // -------------------- ARABE --------------------
     ar: {
       translation: {
         nav_accueil: "الرئيسية",
         nav_salat: "تتبع الصلاة",
-        nav_alhamd: "الحمد لله",
+        nav_alhamdulillah: "الحمد لله",
         nav_hadith: "الحديث والدعاء",
         nav_asma: "أسماء الله الحسنى",
         nav_horaires: "مواقيت الصلاة",
@@ -536,7 +552,6 @@ i18n.use(initReactI18next).init({
         the_most_merciful: "الرحمن",
         see_full_list: "عرض القائمة الكاملة",
 
-        // ── Jours de la semaine (arabe) ──
         days: {
           saturday: "السبت",
           sunday: "الأحد",
@@ -618,7 +633,10 @@ i18n.use(initReactI18next).init({
           west: "⬅️ غرب",
           north_west: "↖️ شمال غرب",
           instruction: "أدر جهازك بحيث يشير الإبرة الخضراء نحو الجنوب الغربي (245 درجة).",
-          unsupported: "الاتجاه غير مدعوم على هذا المتصفح."
+          unsupported: "الاتجاه غير مدعوم على هذا المتصفح.",
+          permission_denied: "تم رفض إذن الاتجاه",        // ✅ AJOUT
+          permission_error: "خطأ في طلب الإذن",          // ✅ AJOUT
+          allow_permission: "السماح بالاتجاه"            // ✅ AJOUT
         },
 
         meteo: {
@@ -678,7 +696,7 @@ i18n.use(initReactI18next).init({
   lng: "fr",               // langue par défaut
   fallbackLng: "fr",       // langue de repli si une clé est manquante
   interpolation: {
-    escapeValue: false      // React échappe déjà les valeurs
+    escapeValue: false     // React échappe déjà les valeurs
   }
 });
 

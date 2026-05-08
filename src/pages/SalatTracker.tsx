@@ -9,6 +9,7 @@ interface Prayer {
   completed: boolean;
 }
 
+
 const defaultPrayers: Prayer[] = [
   { name: 'Fajr', time: '05:15', completed: false },
   { name: 'Dhuhr', time: '12:45', completed: false },
@@ -21,7 +22,6 @@ export default function SalatTracker() {
   const { t } = useTranslation();                         // <-- MODIF : déstructuration
   const { theme } = useTheme();
   const C = theme === 'light' ? lightTheme : darkTheme;
-
   const [prayers, setPrayers] = useState<Prayer[]>(() => {
     const saved = localStorage.getItem('salatTracker');
     return saved ? JSON.parse(saved) : defaultPrayers;

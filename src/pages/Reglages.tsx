@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';               // <-- MODIF : ajout
+import { useTranslation } from 'react-i18next'; 
 import { useTheme } from '../context/ThemeContext';
 import { lightTheme, darkTheme } from '../theme/colors';
 
 export default function Reglages() {
-  const { t } = useTranslation();                             // <-- MODIF : déstructuration
   const { theme } = useTheme();
   const C = theme === 'light' ? lightTheme : darkTheme;
 
+  const { t } = useTranslation(); 
   const [name, setName] = useState(() => localStorage.getItem('userName') || 'Mohamed');
   const [notifications, setNotifications] = useState(() => localStorage.getItem('notifications') === 'true');
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem('darkMode') === 'true');
@@ -18,15 +18,15 @@ export default function Reglages() {
     localStorage.setItem('darkMode', String(darkMode));
     if (darkMode) document.body.style.background = '#1a1a1a';
     else document.body.style.background = C.pageBg;
-  }, [name, notifications, darkMode]);
+  }, [name, notifications, darkMode, C.pageBg]);
 
   return (
     <div style={{ maxWidth: 600, margin: '0 auto', color: '#bcbcbc' }}>
       <div style={{ background: C.cardBg, borderRadius: 24, padding: 24, border: `1px solid ${C.border}` }}>
-        <h2 style={{ marginBottom: 20, color: C.textDark }}>{t('reglages.title')}</h2>           {/* <-- MODIF */}
+        <h2 style={{ marginBottom: 20, color: C.textDark }}>{t('reglages.title')}</h2>
 
         <div style={{ marginBottom: 20 }}>
-          <label style={{ display: 'block', marginBottom: 8, fontWeight: 600, color: C.textDark }}>{t('reglages.name')}</label>   {/* <-- MODIF */}
+          <label style={{ display: 'block', marginBottom: 8, fontWeight: 600, color: C.textDark }}>{t('reglages.name')}</label>
           <input
             type="text"
             value={name}
@@ -36,7 +36,7 @@ export default function Reglages() {
         </div>
 
         <div style={{ marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ color: C.textDark }}>{t('reglages.notifications')}</span>              {/* <-- MODIF */}
+          <span style={{ color: C.textDark }}>{t('reglages.notifications')}</span>
           <label className="switch">
             <input type="checkbox" checked={notifications} onChange={() => setNotifications(!notifications)} />
             <span className="slider"></span>
@@ -44,7 +44,7 @@ export default function Reglages() {
         </div>
 
         <div style={{ marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ color: C.textDark }}>{t('reglages.dark_mode')}</span>                  {/* <-- MODIF */}
+          <span style={{ color: C.textDark }}>{t('reglages.dark_mode')}</span>
           <label className="switch">
             <input type="checkbox" checked={darkMode} onChange={() => setDarkMode(!darkMode)} />
             <span className="slider"></span>
@@ -55,7 +55,7 @@ export default function Reglages() {
           onClick={() => { localStorage.clear(); window.location.reload(); }}
           style={{ background: '#e74c3c', border: 'none', borderRadius: 8, padding: '10px', color: 'white', cursor: 'pointer', width: '100%' }}
         >
-          {t('reglages.reset')}                                                               {/* <-- MODIF */}
+          {t('reglages.reset')}
         </button>
       </div>
 

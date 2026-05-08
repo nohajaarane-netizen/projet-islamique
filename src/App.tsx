@@ -1,8 +1,8 @@
 import { ThemeProvider } from './context/ThemeContext';
 import { LanguageProvider } from './context/LanguageContext';
 import { useState } from 'react';
-import  Sidebar  from './components/layout/Sidebar';
-import  Header  from './components/layout/Header';
+import { Sidebar } from './components/layout/Sidebar';
+import Header from './components/layout/Header';
 import Accueil from './pages/Accueil';
 import SalatTracker from './pages/SalatTracker';
 import Alhamdulillah from './pages/Alhamdulillah';
@@ -17,7 +17,6 @@ import Reglages from './pages/Reglages';
 import { useTheme } from './context/ThemeContext';
 import { lightTheme, darkTheme } from './theme/colors';
 
-// Composant interne qui peut utiliser useTheme()
 function AppContent() {
   const [activePage, setActivePage] = useState('accueil');
   const { theme } = useTheme();
@@ -25,18 +24,30 @@ function AppContent() {
 
   const renderPage = () => {
     switch (activePage) {
-      case 'accueil': return <Accueil />;
-      case 'salat': return <SalatTracker />;
-      case 'alhamdulillah': return <Alhamdulillah />;
-      case 'hadith': return <HadithDua />;
-      case 'asma': return <AsmaUlHusna />;
-      case 'horaires': return <Horaires />;
-      case 'qibla': return <Qibla />;
-      case 'meteo': return <Meteo />;
-      case 'favoris': return <Favoris />;
-      case 'evenements': return <Evenements />;
-      case 'reglages': return <Reglages />;
-      default: return <Accueil />;
+      case 'accueil':
+        return <Accueil />;
+      case 'salat':
+        return <SalatTracker />;
+      case 'alhamdulillah':
+        return <Alhamdulillah />;
+      case 'hadith':
+        return <HadithDua />;
+      case 'asma':
+        return <AsmaUlHusna />;
+      case 'horaires':
+        return <Horaires />;
+      case 'qibla':
+        return <Qibla />;
+      case 'meteo':
+        return <Meteo />;
+      case 'favoris':
+        return <Favoris />;
+      case 'evenements':
+        return <Evenements />;
+      case 'reglages':
+        return <Reglages />;
+      default:
+        return <Accueil />;
     }
   };
 
@@ -53,7 +64,6 @@ function AppContent() {
   );
 }
 
-// Composant racine avec les providers
 export default function App() {
   return (
     <ThemeProvider>
