@@ -10,4 +10,5 @@ export const NAV_ITEMS = [
   { id: "favoris", label: "Mes favoris", icon: "♡" },
   { id: "evenements", label: "Événements", icon: "☷" },
   { id: "reglages", label: "Réglages", icon: "⚙" },
+  { id: "tasbih", label: " Tasbih", icon: "📿" }
 ];

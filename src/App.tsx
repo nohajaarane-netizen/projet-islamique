@@ -16,6 +16,7 @@ import Evenements from './pages/Evenements';
 import Reglages from './pages/Reglages';
 import { useTheme } from './context/ThemeContext';
 import { lightTheme, darkTheme } from './theme/colors';
+import Tasbih from './pages/Tasbih';
 
 function AppContent() {
   const [activePage, setActivePage] = useState('accueil');
@@ -46,6 +47,8 @@ function AppContent() {
         return <Evenements />;
       case 'reglages':
         return <Reglages />;
+      case 'tasbih':  // ✅ AJOUTÉ
+        return <Tasbih />;
       default:
         return <Accueil />;
     }
