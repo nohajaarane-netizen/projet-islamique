@@ -318,7 +318,7 @@ i18n.use(initReactI18next).init({
           asma_desc: "The 99 Names of Allah\nand their meanings"
         },
 
-        berrechid: "📍 Berrechid, Morocco",
+        berrechid: " Berrechid, Morocco",
 
         event_dua_title: "Dua Tawwassoul",
         event_dua_date: "May 24, 2025 • 17:30",
@@ -537,7 +537,7 @@ i18n.use(initReactI18next).init({
           asma_desc: "أسماء الله الـ 99\nومعانيها"
         },
 
-        berrechid: "📍 برشيد، المغرب",
+        berrechid: " برشيد، المغرب",
 
         event_dua_title: "دعاء التوسل",
         event_dua_date: "24 مايو 2025 • 17:30",
