@@ -1,55 +1,360 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&family=Amiri:wght@400;600;700&family=Noto+Naskh+Arabic:wght@400;500;600;700&display=swap');
+/* ── Premium Arabic + Latin fonts ─────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Tajawal:wght@300;400;500;700&family=Scheherazade+New:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&family=Amiri:wght@400;600;700&display=swap');
 
-* {
+/* ── Design tokens (CSS custom properties) ─────────────────────────────────── */
+:root {
+  /* Palette */
+  --olive-deep:    #1B3022;
+  --olive-mid:     #2D4739;
+  --olive-soft:    #8DAA91;
+  --gold:          #C5A267;
+  --gold-light:    #E0C887;
+  --cream:         #F9F7F2;
+  --cream-dark:    #F0EBE0;
+  --text-dark:     #111827;
+  --text-muted:    #6B7280;
+  --text-light:    #9CA3AF;
+
+  /* Typography */
+  --font-ar-heading: 'Cairo', 'IBM Plex Sans Arabic', sans-serif;
+  --font-ar-body:    'Tajawal', 'IBM Plex Sans Arabic', sans-serif;
+  --font-latin-heading: 'Playfair Display', Georgia, serif;
+  --font-latin-body:    'Inter', 'Segoe UI', sans-serif;
+
+  /* Radii */
+  --radius-sm: 12px;
+  --radius-md: 18px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
+
+  /* Shadows */
+  --shadow-card:  0 4px 20px rgba(27, 48, 34, 0.08), 0 1px 4px rgba(0,0,0,0.04);
+  --shadow-float: 0 8px 32px rgba(27, 48, 34, 0.12), 0 2px 8px rgba(0,0,0,0.06);
+  --shadow-glow:  0 0 24px rgba(197, 162, 103, 0.18);
+
+  /* Transitions */
+  --transition-fast:   all 0.18s ease;
+  --transition-normal: all 0.28s ease;
+  --transition-slow:   all 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Glazsmorphism */
+  --glass-bg:      rgba(255, 255, 255, 0.72);
+  --glass-border:  rgba(255, 255, 255, 0.5);
+  --glass-bg-dark: rgba(20, 30, 22, 0.72);
+}
+
+/* ── Base reset ─────────────────────────────────────────────────────────────── */
+*, *::before, *::after {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
+html {
+  scroll-behavior: smooth;
+  text-size-adjust: 100%;
+}
+
 body {
-  font-family: 'Inter', 'Segoe UI', sans-serif;
-  background: #FDF9F2;
-  color: #f7f3e7;
-  transition: background-color 0.25s ease, color 0.25s ease;
+  font-family: var(--font-latin-body);
+  background: var(--cream);
+  color: var(--text-dark);
+  transition: background-color 0.3s ease, color 0.3s ease;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Police pour l'arabe (quand la langue est activée) */
+/* ── Arabic language overrides ──────────────────────────────────────────────── */
 html[lang="ar"] body {
-  font-family: 'Amiri', 'Noto Naskh Arabic', serif;
-  font-size: 1.05rem;
-}
-
-/* Titres */
-h1, h2, h3, .card-title, .sidebar .logo {
-  font-family: 'Playfair Display', serif;
-  font-weight: 600;
-  letter-spacing: -0.01em;
+  font-family: var(--font-ar-body);
+  font-size: 1.02rem;
+  line-height: 1.75;
 }
 
 html[lang="ar"] h1,
 html[lang="ar"] h2,
-html[lang="ar"] h3 {
-  font-family: 'Amiri', 'Noto Naskh Arabic', serif;
+html[lang="ar"] h3,
+html[lang="ar"] h4 {
+  font-family: var(--font-ar-heading);
+  letter-spacing: 0;
+  line-height: 1.55;
 }
 
-/* Animation d'apparition */
-main {
-  animation: fadeIn 0.4s ease-out;
+/* ── Headings ───────────────────────────────────────────────────────────────── */
+h1, h2, h3, h4 {
+  font-family: var(--font-latin-heading);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
 }
 
+/* ── App layout ─────────────────────────────────────────────────────────────── */
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.sidebar-wrapper {
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  z-index: 100;
+}
+
+.app-main {
+  flex: 1;
+  overflow-y: auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-content {
+  padding: 22px 28px;
+  flex: 1;
+}
+
+/* Mobile sidebar overlay */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 99;
+  backdrop-filter: blur(3px);
+}
+
+.hamburger-btn {
+  display: none;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 6px 8px;
+  border-radius: 8px;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition-fast);
+}
+
+/* ── Page entrance animation ────────────────────────────────────────────────── */
+.page-enter {
+  animation: pageEnter 0.38s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+@keyframes pageEnter {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Shared animation keyframes ─────────────────────────────────────────────── */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
-/* Scrollbar personnalisée */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes floatY {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-8px); }
+}
+
+@keyframes floatSlow {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50%       { transform: translateY(-14px) scale(1.02); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(197, 162, 103, 0); }
+  50%       { box-shadow: 0 0 16px 4px rgba(197, 162, 103, 0.25); }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* ── Utility animation classes ──────────────────────────────────────────────── */
+.anim-float      { animation: floatY 4s ease-in-out infinite; }
+.anim-float-slow { animation: floatSlow 6s ease-in-out infinite; }
+.anim-pulse-glow { animation: pulse-glow 2.5s ease-in-out infinite; }
+
+.anim-fade-in    { animation: fadeIn   0.4s ease both; }
+.anim-fade-up    { animation: fadeInUp 0.45s ease both; }
+.anim-scale-in   { animation: scaleIn  0.35s ease both; }
+
+/* Stagger delays */
+.delay-100 { animation-delay: 0.1s; }
+.delay-200 { animation-delay: 0.2s; }
+.delay-300 { animation-delay: 0.3s; }
+.delay-400 { animation-delay: 0.4s; }
+.delay-500 { animation-delay: 0.5s; }
+.delay-600 { animation-delay: 0.6s; }
+
+/* ── Glassmorphism utilities ─────────────────────────────────────────────────── */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+}
+
+.glass-dark {
+  background: var(--glass-bg-dark);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* ── Card defaults ───────────────────────────────────────────────────────────── */
+.card {
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  transition: var(--transition-normal);
+}
+
+.card:hover {
+  box-shadow: var(--shadow-float);
+  transform: translateY(-3px);
+}
+
+/* ── Scrollbar ───────────────────────────────────────────────────────────────── */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 5px;
+  height: 5px;
 }
+
 ::-webkit-scrollbar-track {
-  background: #decea7;
+  background: transparent;
 }
+
 ::-webkit-scrollbar-thumb {
-  background: #635b43;
+  background: rgba(100, 120, 90, 0.28);
   border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 120, 90, 0.5);
+}
+
+/* ── Focus rings ─────────────────────────────────────────────────────────────── */
+button:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid rgba(197, 162, 103, 0.55);
+  outline-offset: 1px;
+}
+
+/* ── Responsive: tablet ─────────────────────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .app-content {
+    padding: 18px 20px;
+  }
+}
+
+/* ── Responsive: mobile ─────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .sidebar-wrapper {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    height: 100%;
+    transform: translateX(-100%);
+    transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .sidebar-wrapper.open {
+    transform: translateX(0);
+    box-shadow: 6px 0 32px rgba(0, 0, 0, 0.28);
+  }
+
+  .sidebar-overlay.visible {
+    display: block;
+  }
+
+  .hamburger-btn {
+    display: flex;
+  }
+
+  .app-content {
+    padding: 14px 14px;
+  }
+}
+
+/* ── Responsive: small mobile ───────────────────────────────────────────────── */
+@media (max-width: 480px) {
+  .app-content {
+    padding: 10px 10px;
+  }
+}
+
+/* ── RTL layout support ─────────────────────────────────────────────────────── */
+[dir="rtl"] {
+  /* Flexbox row automatically reverses, so sidebar goes to the right naturally */
+  text-align: right;
+}
+
+[dir="rtl"] .app-layout {
+  flex-direction: row-reverse;
+}
+
+@media (max-width: 768px) {
+  [dir="rtl"] .sidebar-wrapper {
+    left: auto;
+    right: 0;
+    transform: translateX(100%);
+  }
+
+  [dir="rtl"] .sidebar-wrapper.open {
+    transform: translateX(0);
+    box-shadow: -6px 0 32px rgba(0, 0, 0, 0.28);
+  }
+}
+
+/* ── Shimmer loading effect ─────────────────────────────────────────────────── */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(200, 190, 170, 0.12) 25%,
+    rgba(200, 190, 170, 0.28) 50%,
+    rgba(200, 190, 170, 0.12) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s infinite;
+  border-radius: var(--radius-sm);
 }

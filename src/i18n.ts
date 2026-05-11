@@ -169,27 +169,38 @@ i18n.use(initReactI18next).init({
         // HORAIRES
         horaires: {
           title: "Horaires des prières",
-          subtitle: "Planifiez votre journée autour des prières (Berrechid, Maroc)",
+          subtitle: "Planifiez votre journée autour des heures de prière",
+          location: "Berrechid, Maroc",
           day: "Jour",
+          loading: "Chargement des horaires...",
+          error: "Impossible de récupérer les horaires",
+          method: "Méthode de calcul",
+          method_name: "MWL (Muslim World League)",
+          location_label: "Localisation",
           fajr: "Fajr",
+          fajr_sub: "Aube",
           dhuhr: "Dhuhr",
+          dhuhr_sub: "Zénith",
           asr: "Asr",
+          asr_sub: "Après-midi",
           maghrib: "Maghrib",
-          isha: "Isha"
+          maghrib_sub: "Coucher",
+          isha: "Isha",
+          isha_sub: "Nuit"
         },
 
         // QIBLA (avec nouvelles clés pour la boussole interactive)
         qibla: {
           title: "Direction de la Qibla",
           subtitle: "Trouvez la direction de la Kaaba.",
-          north: "⬆️ Nord",
-          north_east: "↗️ Nord-Est",
-          east: "➡️ Est",
-          south_east: "↘️ Sud-Est",
-          south: "⬇️ Sud",
-          south_west: "↙️ Sud-Ouest",
-          west: "⬅️ Ouest",
-          north_west: "↖️ Nord-Ouest",
+          north: "Nord",
+          north_east: "Nord-Est",
+          east: "Est",
+          south_east: "Sud-Est",
+          south: "Sud",
+          south_west: "Sud-Ouest",
+          west: "Ouest",
+          north_west: "Nord-Ouest",
           instruction: "Tournez votre appareil pour que l'aiguille verte pointe vers le sud-ouest (245°).",
           unsupported: "Orientation non supportée sur ce navigateur.",
           // Clés ajoutées pour la demande de permission (iOS)
@@ -252,7 +263,8 @@ i18n.use(initReactI18next).init({
           search: "Rechercher",
           add: "Ajouter",
           yes: "Oui",
-          no: "Non"
+          no: "Non",
+          page: "Page"   // ✅ AJOUT pour la pagination
         }
       }
     },
@@ -272,7 +284,7 @@ i18n.use(initReactI18next).init({
         nav_evenements: "Events",
         nav_reglages: "Settings",
 
-        welcome: "Assalamu alaykum 👋",
+        welcome: "Assalamu alaykum ",
         hero_title: "Your daily spiritual light",
         hero_desc: "Move closer to Allah each day with tools designed for your heart and mind.",
         btn_start: "▶ Start",
@@ -470,7 +482,8 @@ i18n.use(initReactI18next).init({
           search: "Search",
           add: "Add",
           yes: "Yes",
-          no: "No"
+          no: "No",
+          page: "Page"   // ✅ AJOUT
         }
       }
     },
@@ -490,7 +503,7 @@ i18n.use(initReactI18next).init({
         nav_evenements: "الأحداث",
         nav_reglages: "الإعدادات",
 
-        welcome: "السلام عليكم 👋",
+        welcome: "السلام عليكم",
         hero_title: "نورك الروحي اليومي",
         hero_desc: "تقدم كل يوم نحو الله بأدوات صممت لقلبك وروحك.",
         btn_start: "▶ ابدأ",
@@ -688,7 +701,8 @@ i18n.use(initReactI18next).init({
           search: "بحث",
           add: "إضافة",
           yes: "نعم",
-          no: "لا"
+          no: "لا",
+          page: "صفحة"   // ✅ AJOUT
         }
       }
     }

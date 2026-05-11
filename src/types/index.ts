@@ -1,5 +1,3 @@
-import { To } from "react-router-dom";
-
 export interface PrayerTime {
   name: string;
   time: string;
@@ -11,7 +9,7 @@ export interface StatCard {
   label: string;
   value: string;
   sub: string;
-  icon: string;
+  icon?: string;
   progress?: number;
   iconBg: string;
 }
@@ -20,7 +18,7 @@ export interface SpiritualTool {
   id: string;
   title: string;
   subtitle: string;
-  icon: string;
+  icon?: string;
 }
 
 export interface AppEvent {
@@ -29,12 +27,12 @@ export interface AppEvent {
   date: string;
   time: string;
   location: string;
-  icon: string;
+  category?: string;
+  icon?: string;
 }
 
 export interface NavItem {
-  path: To;
   id: string;
   label: string;
-  icon: string;
+  icon?: string;
 }

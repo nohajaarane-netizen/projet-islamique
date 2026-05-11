@@ -7,7 +7,7 @@ import { lightTheme, darkTheme } from '../theme/colors';
 import { HADITH_OF_DAY } from '../data/hadiths';
 import axios from 'axios';
 import { config } from '../config';
-import { FaHandPeace, FaFire, FaStar, FaLeaf, FaBookOpen, FaCalendarAlt, FaMoon, FaMosque, FaBell, FaMapMarkerAlt } from 'react-icons/fa';
+import { FaFire, FaStar, FaBookOpen, FaCalendarAlt, FaMoon, FaMosque, FaBell, FaMapMarkerAlt } from 'react-icons/fa';
 import { GiPrayerBeads, GiGrain, GiSunflower } from 'react-icons/gi';
 import { WiDaySunny, WiCloudy, WiRain, WiHumidity, WiStrongWind } from 'react-icons/wi';
 
@@ -196,7 +196,7 @@ export default function Accueil() {
           justifyContent: "flex-end"
         }}>
           <p style={{ margin: "0 0 5px", fontSize: "13px", color: "rgba(232,204,100,0.9)" }}>
-            {t('welcome')} <FaHandPeace style={{ fontSize: "14px", color: "#C8A84B" }} />
+            {t('welcome')}
           </p>
           <h1 style={{ margin: "0 0 9px", fontSize: "28px", fontWeight: 700, color: "#FFFFFF", lineHeight: 1.2 }}>{t('hero_title')}</h1>
           <p style={{ margin: "0 0 20px", fontSize: "12px", color: "rgba(255,255,255,0.6)", lineHeight: 1.65, maxWidth: "300px" }}>{t('hero_desc')}</p>

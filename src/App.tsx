@@ -1,5 +1,6 @@
 import { ThemeProvider } from './context/ThemeContext';
 import { LanguageProvider } from './context/LanguageContext';
+import { NavigationContext } from './context/NavigationContext';
 import { useState } from 'react';
 import { Sidebar } from './components/layout/Sidebar';
 import Header from './components/layout/Header';
@@ -14,56 +15,61 @@ import Meteo from './pages/Meteo';
 import Favoris from './pages/Favoris';
 import Evenements from './pages/Evenements';
 import Reglages from './pages/Reglages';
+import Tasbih from './pages/Tasbih';
 import { useTheme } from './context/ThemeContext';
 import { lightTheme, darkTheme } from './theme/colors';
-import Tasbih from './pages/Tasbih';
 
 function AppContent() {
   const [activePage, setActivePage] = useState('accueil');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const { theme } = useTheme();
   const C = theme === 'light' ? lightTheme : darkTheme;
 
+  const handleNavigate = (pageId: string) => {
+    setActivePage(pageId);
+    setSidebarOpen(false);
+  };
+
   const renderPage = () => {
     switch (activePage) {
-      case 'accueil':
-        return <Accueil />;
-      case 'salat':
-        return <SalatTracker />;
-      case 'alhamdulillah':
-        return <Alhamdulillah />;
-      case 'hadith':
-        return <HadithDua />;
-      case 'asma':
-        return <AsmaUlHusna />;
-      case 'horaires':
-        return <Horaires />;
-      case 'qibla':
-        return <Qibla />;
-      case 'meteo':
-        return <Meteo />;
-      case 'favoris':
-        return <Favoris />;
-      case 'evenements':
-        return <Evenements />;
-      case 'reglages':
-        return <Reglages />;
-      case 'tasbih':  // ✅ AJOUTÉ
-        return <Tasbih />;
-      default:
-        return <Accueil />;
+      case 'accueil':        return <Accueil />;
+      case 'salat':          return <SalatTracker />;
+      case 'alhamdulillah':  return <Alhamdulillah />;
+      case 'hadith':         return <HadithDua />;
+      case 'asma':           return <AsmaUlHusna />;
+      case 'horaires':       return <Horaires />;
+      case 'qibla':          return <Qibla />;
+      case 'meteo':          return <Meteo />;
+      case 'favoris':        return <Favoris />;
+      case 'evenements':     return <Evenements />;
+      case 'reglages':       return <Reglages />;
+      case 'tasbih':         return <Tasbih />;
+      default:               return <Accueil />;
     }
   };
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh", background: C.pageBg }}>
-      <Sidebar activePage={activePage} onNavigate={setActivePage} />
-      <main style={{ flex: 1, overflowY: "auto" }}>
-        <Header />
-        <div style={{ padding: "20px 26px" }}>
-          {renderPage()}
+    <NavigationContext.Provider value={handleNavigate}>
+      <div className="app-layout" style={{ background: C.pageBg }}>
+        {/* Mobile overlay */}
+        <div
+          className={`sidebar-overlay ${sidebarOpen ? 'visible' : ''}`}
+          onClick={() => setSidebarOpen(false)}
+        />
+
+        {/* Sidebar wrapper — sticky on desktop, fixed on mobile */}
+        <div className={`sidebar-wrapper ${sidebarOpen ? 'open' : ''}`}>
+          <Sidebar activePage={activePage} onNavigate={handleNavigate} />
         </div>
-      </main>
-    </div>
+
+        <div className="app-main">
+          <Header onMenuToggle={() => setSidebarOpen(o => !o)} />
+          <div className="app-content">
+            {renderPage()}
+          </div>
+        </div>
+      </div>
+    </NavigationContext.Provider>
   );
 }
 
