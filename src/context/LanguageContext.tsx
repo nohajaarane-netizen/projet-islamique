@@ -21,6 +21,8 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   useEffect(() => {
     localStorage.setItem('language', language);
     i18n.changeLanguage(language);
+    document.documentElement.lang = language;
+    document.documentElement.dir = language;
     if (language === 'ar') {
       document.body.dir = 'rtl';
       document.body.classList.add('rtl');

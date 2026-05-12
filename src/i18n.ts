@@ -264,6 +264,7 @@ i18n.use(initReactI18next).init({
           add: "Ajouter",
           yes: "Oui",
           no: "Non",
+          retry: "Réessayer",
           page: "Page"   // ✅ AJOUT pour la pagination
         }
       }
@@ -297,8 +298,8 @@ i18n.use(initReactI18next).init({
         my_position: "My position",
 
         stats: {
-          prayers_today: "Prayers today",
-          current_streak: "Current streak",
+          prayers_today: "Prayers Today",
+          current_streak: "Current Streak",
           dhikr_today: "Dhikr today",
           spiritual_score: "Spiritual score",
           completed: "Completed",
@@ -483,6 +484,7 @@ i18n.use(initReactI18next).init({
           add: "Add",
           yes: "Yes",
           no: "No",
+          retry: "Retry",
           page: "Page"   // ✅ AJOUT
         }
       }
@@ -541,10 +543,10 @@ i18n.use(initReactI18next).init({
 
         event_dua_title: "دعاء التوسل",
         event_dua_date: "24 مايو 2025 • 17:30",
-        event_dua_location: "Convention City",
+        event_dua_location: "مدينة المؤتمرات",
         event_ramadan_title: "الاستعداد لرمضان",
         event_ramadan_date: "31 مايو 2025 • 17:30",
-        event_ramadan_location: "Convention City",
+        event_ramadan_location: "مدينة المؤتمرات",
         event_conf_title: "المؤتمر الإسلامي",
         event_conf_date: "07 يونيو 2025 • 10:00",
         event_conf_location: "المركز الثقافي",
@@ -702,6 +704,7 @@ i18n.use(initReactI18next).init({
           add: "إضافة",
           yes: "نعم",
           no: "لا",
+          retry: "إعادة المحاولة",
           page: "صفحة"   // ✅ AJOUT
         }
       }

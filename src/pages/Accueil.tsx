@@ -12,6 +12,86 @@ import { GiPrayerBeads, GiGrain, GiSunflower } from 'react-icons/gi';
 import { WiDaySunny, WiCloudy, WiRain, WiHumidity, WiStrongWind } from 'react-icons/wi';
 
 /**
+ * Traduit les conditions météorologiques en utilisant les codes OpenWeatherMap pour plus de fiabilité
+ */
+function translateWeatherByCode(weatherCode: number, language: string): string {
+  if (language !== 'ar') return '';
+
+  const arabicDescriptions: Record<number, string> = {
+    // Thunderstorm group (200-232)
+    200: 'عاصفة رعدية مع أمطار خفيفة',
+    201: 'عاصفة رعدية مع أمطار',
+    202: 'عاصفة رعدية مع أمطار غزيرة',
+    210: 'عاصفة رعدية خفيفة',
+    211: 'عاصفة رعدية',
+    212: 'عاصفة رعدية شديدة',
+    221: 'عاصفة رعدية ممزقة',
+    230: 'عاصفة رعدية مع رذاذ',
+    231: 'عاصفة رعدية مع رذاذ',
+    232: 'عاصفة رعدية مع رذاذ غزير',
+
+    // Drizzle group (300-321)
+    300: 'رذاذ خفيف',
+    301: 'رذاذ',
+    302: 'رذاذ غزير',
+    310: 'أمطار رذاذ خفيفة',
+    311: 'أمطار رذاذ',
+    312: 'أمطار رذاذ غزيرة',
+    313: 'أمطار ورذاذ',
+    314: 'أمطار ورذاذ غزيرة',
+    321: 'رذاذ ممطر',
+
+    // Rain group (500-531)
+    500: 'أمطار خفيفة',
+    501: 'أمطار معتدلة',
+    502: 'أمطار غزيرة',
+    503: 'أمطار شديدة',
+    504: 'أمطار شديدة جداً',
+    511: 'أمطار جليدية',
+    520: 'أمطار خفيفة ممطرة',
+    521: 'أمطار ممطرة',
+    522: 'أمطار غزيرة ممطرة',
+    531: 'أمطار ممطرة ممزقة',
+
+    // Snow group (600-622)
+    600: 'ثلج خفيف',
+    601: 'ثلج',
+    602: 'ثلج غزير',
+    611: 'ثلج ممطر',
+    612: 'ثلج ممطر خفيف',
+    613: 'رذاذ ثلجي',
+    615: 'أمطار وثلج خفيفة',
+    616: 'أمطار وثلج',
+    620: 'ثلج ممطر خفيف',
+    621: 'ثلج ممطر',
+    622: 'ثلج ممطر غزير',
+
+    // Atmosphere group (700-781)
+    701: 'ضباب',
+    711: 'دخان',
+    721: 'ضباب خفيف',
+    731: 'عواصف رملية',
+    741: 'ضباب',
+    751: 'عواصف رملية',
+    761: 'غبار',
+    762: 'رماد بركاني',
+    771: 'عواصف',
+    781: 'إعصار',
+
+    // Clear sky (800)
+    800: 'سماء صافية',
+
+    // Clouds group (801-804)
+    801: 'قليل من السحب',
+    802: 'سحب متفرقة',
+    803: 'سحب ممزقة',
+    804: 'غائم كثيفاً'
+  };
+
+  return arabicDescriptions[weatherCode] || '';
+}
+
+/**
  * Composant principal de la page d'accueil.
  * Affiche :
  * - Une bannière (hero) avec image de fond (mosquée)
@@ -22,9 +102,10 @@ import { WiDaySunny, WiCloudy, WiRain, WiHumidity, WiStrongWind } from 'react-ic
  * - Événements, hadith du jour, progression AsmaUlHusna
  */
 export default function Accueil() {
-  const { t } = useTranslation();                     // Pour les traductions (i18n)
+  const { t, i18n } = useTranslation();                     // Pour les traductions (i18n)
   const { theme } = useTheme();                       // Mode clair/sombre
   const C = theme === 'light' ? lightTheme : darkTheme; // Palette de couleurs selon le thème
+  const isArabic = i18n.language === 'ar';            // Vérifie si la langue actuelle est l'arabe
   const countdown = useCountdown(2 * 3600 + 52 * 60 + 34); // Compte à rebours pour la prochaine prière
 
   // --- État pour les horaires de prière (API AlAdhan) ---
@@ -35,7 +116,7 @@ export default function Accueil() {
   // --- État pour la météo (API OpenWeatherMap) ---
   const [weatherData, setWeatherData] = useState<any>(null);
   const [loadingWeather, setLoadingWeather] = useState<boolean>(true);
-  const [errorWeather, setErrorWeather] = useState<string>('');
+  const [weatherErrorKey, setWeatherErrorKey] = useState<string>('');
 
   // --- Récupération des horaires de prière ---
   useEffect(() => {
@@ -61,7 +142,7 @@ export default function Accueil() {
   useEffect(() => {
     const fetchWeather = async () => {
       if (!config.OPENWEATHER_API_KEY || config.OPENWEATHER_API_KEY === "ta_clé_ici") {
-        setErrorWeather("Clé API météo manquante");
+        setWeatherErrorKey('meteo.missing_key');
         setLoadingWeather(false);
         return;
       }
@@ -69,23 +150,23 @@ export default function Accueil() {
         async (position) => {
           try {
             const res = await axios.get(
-              `https://api.openweathermap.org/data/2.5/weather?lat=${position.coords.latitude}&lon=${position.coords.longitude}&units=metric&lang=fr&appid=${config.OPENWEATHER_API_KEY}`
+              `https://api.openweathermap.org/data/2.5/weather?lat=${position.coords.latitude}&lon=${position.coords.longitude}&units=metric&lang=${i18n.language}&appid=${config.OPENWEATHER_API_KEY}`
             );
             setWeatherData({
               temp: Math.round(res.data.main.temp),
-              condition: res.data.weather[0].description,
+              condition: i18n.language === 'ar' ? translateWeatherByCode(res.data.weather[0].id, i18n.language) || res.data.weather[0].description : res.data.weather[0].description,
               feelsLike: Math.round(res.data.main.feels_like),
               humidity: res.data.main.humidity,
-              wind: res.data.wind.speed
+              wind: Math.round(res.data.wind.speed)
             });
           } catch (err) {
-            setErrorWeather("Erreur chargement météo");
+            setWeatherErrorKey('meteo.error');
           } finally {
             setLoadingWeather(false);
           }
         },
         () => {
-          setErrorWeather("Géolocalisation refusée");
+          setWeatherErrorKey('meteo.geo_denied');
           setLoadingWeather(false);
         }
       );
@@ -164,6 +245,9 @@ export default function Accueil() {
     { name: "Maghrib", label: t('salat.maghrib') },
     { name: "Isha", label: t('salat.isha') },
   ];
+
+  const hadithText = isArabic ? HADITH_OF_DAY.arabic : HADITH_OF_DAY.french;
+  const hadithSource = isArabic ? 'صحيح البخاري (1)' : HADITH_OF_DAY.source;
 
   // --- Choix de l'icône météo selon la température ---
   const getWeatherIcon = (temp: number) => {
@@ -367,9 +451,9 @@ export default function Accueil() {
             <div style={{ textAlign: "center", padding: "20px" }}>
               <div style={{ display: "inline-block", width: "30px", height: "30px", border: `2px solid ${C.border}`, borderTop: `2px solid ${C.green}`, borderRadius: "50%", animation: "spin 1s linear infinite" }} />
             </div>
-          ) : errorWeather ? (
+          ) : weatherErrorKey ? (
             <div style={{ textAlign: "center", padding: "10px", background: "rgba(231,76,60,0.1)", borderRadius: "8px" }}>
-              <p style={{ fontSize: "11px", color: "#e74c3c" }}>{errorWeather}</p>
+              <p style={{ fontSize: "11px", color: "#e74c3c" }}>{t(weatherErrorKey)}</p>
             </div>
           ) : weatherData ? (
             <>
