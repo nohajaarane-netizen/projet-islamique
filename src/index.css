@@ -1,5 +1,5 @@
-/* ── Premium Arabic + Latin fonts ─────────────────────────────────────────── */
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Tajawal:wght@300;400;500;700&family=Scheherazade+New:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&family=Amiri:wght@400;600;700&display=swap');
+/* ── Premium fonts — Cairo universelle ────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&family=Scheherazade+New:wght@400;500;600;700&family=Amiri:wght@400;600;700&display=swap');
 
 /* ── Design tokens (CSS custom properties) ─────────────────────────────────── */
 :root {
@@ -15,11 +15,11 @@
   --text-muted:    #6B7280;
   --text-light:    #9CA3AF;
 
-  /* Typography */
-  --font-ar-heading: 'Scheherazade New', 'Amiri', 'Cairo', 'IBM Plex Sans Arabic', sans-serif;
-  --font-ar-body:    'Scheherazade New', 'Amiri', 'Tajawal', 'IBM Plex Sans Arabic', sans-serif;
-  --font-latin-heading: 'Playfair Display', Georgia, serif;
-  --font-latin-body:    'Inter', 'Segoe UI', sans-serif;
+  /* Typography — Cairo pour tout */
+  --font-ar-heading:    'Cairo', sans-serif;
+  --font-ar-body:       'Cairo', sans-serif;
+  --font-latin-heading: 'Cairo', sans-serif;
+  --font-latin-body:    'Cairo', sans-serif;
 
   /* Radii */
   --radius-sm: 12px;
@@ -56,7 +56,7 @@ html {
 }
 
 body {
-  font-family: var(--font-latin-body);
+  font-family: 'Cairo', sans-serif;
   background: var(--cream);
   color: var(--text-dark);
   transition: background-color 0.3s ease, color 0.3s ease;
@@ -65,18 +65,11 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-body.rtl {
-  direction: rtl;
-}
-
-/* ── Arabic language overrides ──────────────────────────────────────────────────────────────── */
-html[lang="ar"] body,
-body.rtl {
+/* ── Arabic language overrides ──────────────────────────────────────────────── */
+html[lang="ar"] body {
   font-family: var(--font-ar-body);
   font-size: 1.02rem;
   line-height: 1.75;
-  letter-spacing: 0.01em;
-  text-rendering: optimizeLegibility;
 }
 
 html[lang="ar"] h1,
@@ -84,17 +77,20 @@ html[lang="ar"] h2,
 html[lang="ar"] h3,
 html[lang="ar"] h4 {
   font-family: var(--font-ar-heading);
-  font-weight: 700;
-  letter-spacing: 0.012em;
+  letter-spacing: 0;
   line-height: 1.55;
 }
 
 /* ── Headings ───────────────────────────────────────────────────────────────── */
 h1, h2, h3, h4 {
-  font-family: var(--font-latin-heading);
-  font-weight: 600;
+  font-family: 'Cairo', sans-serif;
+  font-weight: 700;
   letter-spacing: -0.01em;
   line-height: 1.25;
+}
+
+body {
+  font-family: 'Cairo', sans-serif;
 }
 
 /* ── App layout ─────────────────────────────────────────────────────────────── */
@@ -104,7 +100,6 @@ h1, h2, h3, h4 {
 }
 
 .sidebar-wrapper {
-  order: 0;
   flex-shrink: 0;
   position: sticky;
   top: 0;
@@ -113,27 +108,11 @@ h1, h2, h3, h4 {
 }
 
 .app-main {
-  order: 1;
   flex: 1;
   overflow-y: auto;
   min-width: 0;
   display: flex;
   flex-direction: column;
-}
-
-body.rtl .app-layout,
-[dir="rtl"] .app-layout {
-  flex-direction: row-reverse;
-}
-
-body.rtl .sidebar-wrapper,
-[dir="rtl"] .sidebar-wrapper {
-  order: 1;
-}
-
-body.rtl .app-main,
-[dir="rtl"] .app-main {
-  order: 0;
 }
 
 .app-content {
@@ -304,6 +283,33 @@ select:focus-visible {
   outline-offset: 1px;
 }
 
+button {
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease, border-color 0.18s ease;
+}
+
+button:not(:disabled):hover {
+  transform: translateY(-1px);
+}
+
+button:not(:disabled):active {
+  transform: translateY(0) scale(0.98);
+}
+
+button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.interactive-card {
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.interactive-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.12);
+  border-color: rgba(197, 162, 103, 0.35);
+}
+
 /* ── Responsive: tablet ─────────────────────────────────────────────────────── */
 @media (max-width: 1024px) {
   .app-content {
@@ -354,18 +360,23 @@ select:focus-visible {
   text-align: right;
 }
 
-[dir="rtl"] .app-layout {
+.app-layout[dir="rtl"] {
   flex-direction: row-reverse;
+  direction: ltr;
+}
+
+.app-layout[dir="rtl"] > * {
+  direction: rtl;
 }
 
 @media (max-width: 768px) {
-  [dir="rtl"] .sidebar-wrapper {
+  .app-layout[dir="rtl"] .sidebar-wrapper {
     left: auto;
     right: 0;
     transform: translateX(100%);
   }
 
-  [dir="rtl"] .sidebar-wrapper.open {
+  .app-layout[dir="rtl"] .sidebar-wrapper.open {
     transform: translateX(0);
     box-shadow: -6px 0 32px rgba(0, 0, 0, 0.28);
   }
@@ -382,4 +393,93 @@ select:focus-visible {
   background-size: 200% 100%;
   animation: shimmer 1.6s infinite;
   border-radius: var(--radius-sm);
+}
+
+/* ── Dynamic & interactive global styles ────────────────────────────────────── */
+
+/* Cairo sur tout */
+*, input, button, select, textarea {
+  font-family: 'Cairo', sans-serif;
+}
+
+/* Ripple effect sur les boutons */
+button {
+  position: relative;
+  overflow: hidden;
+}
+button::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle, rgba(255,255,255,0.18) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+button:active::after {
+  opacity: 1;
+  transition: opacity 0s;
+}
+
+/* Hover lift sur les cards */
+.card:hover,
+[class*="card"]:hover {
+  transform: translateY(-4px) scale(1.008);
+  box-shadow: 0 12px 40px rgba(27, 48, 34, 0.14), 0 2px 8px rgba(0,0,0,0.06);
+}
+
+/* Liens interactifs */
+a {
+  transition: color 0.2s ease, opacity 0.2s ease;
+}
+
+/* Smooth reveal animation pour les éléments qui apparaissent */
+@keyframes revealUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes revealScale {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(197, 162, 103, 0); }
+  50%       { box-shadow: 0 0 20px 6px rgba(197, 162, 103, 0.18); }
+}
+
+.anim-reveal-up    { animation: revealUp    0.42s cubic-bezier(0.4,0,0.2,1) both; }
+.anim-reveal-scale { animation: revealScale 0.35s cubic-bezier(0.4,0,0.2,1) both; }
+.anim-glow-pulse   { animation: glowPulse   2.8s ease-in-out infinite; }
+
+/* Stagger delays supplémentaires */
+.delay-50  { animation-delay: 0.05s; }
+.delay-700 { animation-delay: 0.7s; }
+.delay-800 { animation-delay: 0.8s; }
+
+/* Hover sur images/icônes */
+img, svg {
+  transition: transform 0.25s ease, filter 0.25s ease;
+}
+
+/* Input focus plus visible */
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(197, 162, 103, 0.22);
+  transition: box-shadow 0.2s ease;
+}
+
+/* Mode sombre — amélioration glassmorphism */
+.dark .glass {
+  background: rgba(12, 18, 32, 0.80);
+  border-color: rgba(100, 160, 255, 0.10);
+}
+
+/* Scrollbar améliorée mode sombre */
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(100, 160, 255, 0.18);
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 160, 255, 0.35);
 }

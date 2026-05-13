@@ -16,20 +16,20 @@ export const lightTheme = {
 };
 
 export const darkTheme = {
-  pageBg:       "#0D1810",        // vert forêt nuit
-  headerBg:     "#101E14",
-  sidebar:      "#091410",        // quasi-noir vert
-  sidebarBorder:"rgba(255,255,255,0.07)",
-  cardBg:       "#141E16",        // carte sombre
-  cardBg2:      "#1A2A1E",        // légèrement plus clair
-  textDark:     "#E6E0D0",        // ivoire chaud
-  textMid:      "#9AA89A",
-  textLight:    "#627060",
-  textSidebar:  "#C8A84B",
-  gold:         "#D4A840",        // or chaud
-  green:        "#4A9468",
-  greenLight:   "#386050",
-  border:       "#1C3022",        // bordure vert sombre
+  pageBg:       "#121212",        // gris très profond
+  headerBg:     "#1A1A1A",        // gris anthracite
+  sidebar:      "#292929",        // noir-cendré
+  sidebarBorder:"rgba(255,255,255,0.06)",
+  cardBg:       "#1E1E1E",        // gris foncé élégant
+  cardBg2:      "#262626",        // légèrement plus clair
+  textDark:     "#F0F0F0",        // blanc cassé
+  textMid:      "#B8B8B8",        // gris clair doux
+  textLight:    "#6E6E6E",        // gris moyen
+  textSidebar:  "#D4D4D4",        // gris clair pour sidebar
+  gold:         "#C9A03D",        // or discret mais chaleureux
+  green:        "#34583f",        // vert sauge / grisé
+  greenLight:   "#8AB09A",
+  border:       "#2C2C2C",        // gris frontalier
 };
 
 export const C = lightTheme;

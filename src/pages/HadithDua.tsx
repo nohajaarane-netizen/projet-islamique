@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '../context/ThemeContext';
 import { lightTheme, darkTheme } from '../theme/colors';
 import { FaHeart, FaRegHeart, FaCopy, FaBookmark, FaRegBookmark } from 'react-icons/fa';
@@ -40,7 +41,19 @@ const duas: DuaItem[] = [
 ];
 
 const FEATURED_HADITH = hadiths[0];
-const THEME_FILTERS = ['Tous', 'Quotidien', 'Protection', 'Gratitude', 'Foi', 'Connaissance', 'Famille'];
+
+// Internal IDs for theme filters — language-neutral
+const THEME_IDS: Array<'__all__' | Theme> = ['__all__', 'Quotidien', 'Protection', 'Gratitude', 'Foi', 'Connaissance', 'Famille'];
+
+const THEME_I18N_KEYS: Record<string, string> = {
+  '__all__': 'hadith_extra.filter_all',
+  Quotidien:   'hadith_extra.theme_quotidien',
+  Protection:  'hadith_extra.theme_protection',
+  Gratitude:   'hadith_extra.theme_gratitude',
+  Foi:         'hadith_extra.theme_foi',
+  Connaissance:'hadith_extra.theme_connaissance',
+  Famille:     'hadith_extra.theme_famille',
+};
 
 const gold = '#C8A84B';
 const goldLight = '#E0C870';
@@ -64,13 +77,14 @@ const IslamicPattern = ({ opacity = 0.06, color = gold }: { opacity?: number; co
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function HadithDua() {
+  const { t } = useTranslation();
   const { theme } = useTheme();
   const C = theme === 'light' ? lightTheme : darkTheme;
   const isDark = theme === 'dark';
 
   const [search, setSearch] = useState('');
   const [activeTab, setActiveTab] = useState<'hadiths' | 'duas'>('hadiths');
-  const [themeFilter, setThemeFilter] = useState('Tous');
+  const [themeFilter, setThemeFilter] = useState<'__all__' | Theme>('__all__');
   const [displayLang, setDisplayLang] = useState<'fr' | 'en'>('fr');
   const [favorites, setFavorites] = useState<Set<number>>(() => {
     try { const s = localStorage.getItem('hadith-favorites'); return s ? new Set(JSON.parse(s)) : new Set(); }
@@ -98,8 +112,8 @@ export default function HadithDua() {
     return item.french.toLowerCase().includes(q) || item.arabic.includes(q) || item.source.toLowerCase().includes(q) || (item.english || '').toLowerCase().includes(q);
   };
 
-  const filteredHadiths = hadiths.filter(h => matchesSearch(h) && (themeFilter === 'Tous' || h.theme === themeFilter));
-  const filteredDuas = duas.filter(d => matchesSearch(d) && (themeFilter === 'Tous' || d.theme === themeFilter));
+  const filteredHadiths = hadiths.filter(h => matchesSearch(h) && (themeFilter === '__all__' || h.theme === themeFilter));
+  const filteredDuas = duas.filter(d => matchesSearch(d) && (themeFilter === '__all__' || d.theme === themeFilter));
 
   const glass = (extra?: object): React.CSSProperties => ({
     background: isDark ? 'rgba(14,22,16,0.88)' : 'rgba(255,255,255,0.95)',
@@ -126,10 +140,10 @@ export default function HadithDua() {
       <IslamicPattern opacity={isDark ? 0.03 : 0.025} />
 
       <div style={{ position: 'relative' }}>
-        {/* Arabic text — large Scheherazade */}
+        {/* Arabic text */}
         <p style={{
           margin: '0 0 10px', textAlign: 'right', direction: 'rtl',
-          fontFamily: "'Scheherazade New', 'Amiri', serif",
+          fontFamily: "'Cairo', sans-serif",
           fontSize: 'clamp(20px,3vw,26px)', color: isDark ? goldLight : '#1B3022',
           lineHeight: 1.85, letterSpacing: '0.01em',
           textShadow: isDark ? `0 0 20px rgba(200,168,75,0.1)` : 'none',
@@ -142,7 +156,7 @@ export default function HadithDua() {
           <p style={{
             margin: '0 0 10px', fontSize: 12.5, color: gold,
             fontStyle: 'italic', lineHeight: 1.5,
-            fontFamily: "'Inter', sans-serif",
+            fontFamily: "'Cairo', sans-serif",
           }}>
             {item.transliteration}
           </p>
@@ -155,7 +169,7 @@ export default function HadithDua() {
         <p style={{
           margin: '0 0 14px', fontSize: 14, fontStyle: 'italic',
           color: C.textMid, lineHeight: 1.75,
-          fontFamily: "'Inter', sans-serif",
+          fontFamily: "'Cairo', sans-serif",
         }}>
           « {displayLang === 'en' && item.english ? item.english : item.french} »
         </p>
@@ -169,19 +183,19 @@ export default function HadithDua() {
               borderRadius: 20, padding: '3px 12px', fontSize: 10.5,
               color: themeColors[item.theme] || gold, fontWeight: 700, letterSpacing: '0.05em',
             }}>
-              {item.theme}
+              {t(THEME_I18N_KEYS[item.theme] || 'hadith_extra.filter_all')}
             </span>
             <span style={{ fontSize: 11.5, color: C.textLight }}>{item.source}</span>
           </div>
 
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <button onClick={() => copyText(item)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: copiedId === item.id ? C.green : C.textLight, padding: 4, transition: 'color 0.15s', display: 'flex', alignItems: 'center' }} title="Copier">
+            <button onClick={() => copyText(item)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: copiedId === item.id ? C.green : C.textLight, padding: 4, transition: 'color 0.15s', display: 'flex', alignItems: 'center' }} title={t('hadith_extra.copy')}>
               <FaCopy size={13} />
             </button>
             <button onClick={() => toggleFavorite(item.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: favorites.has(item.id) ? '#e74c3c' : C.textLight, padding: 4, transition: 'color 0.15s, transform 0.15s', display: 'flex', alignItems: 'center' }}
               onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.2)'; }}
               onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; }}
-              title="Favori">
+              title={t('hadith_extra.favorite')}>
               {favorites.has(item.id) ? <FaHeart size={13} /> : <FaRegHeart size={13} />}
             </button>
           </div>
@@ -195,39 +209,36 @@ export default function HadithDua() {
 
       {/* ── HERO ─────────────────────────────────────────────────────────── */}
       <div style={{
-        position: 'relative', borderRadius: 26, overflow: 'hidden', marginBottom: 28,
-        backgroundImage: `linear-gradient(145deg, rgba(6,15,10,0.96) 0%, rgba(18,48,30,0.88) 50%, rgba(8,20,14,0.78) 100%), url('/photomosquee.png')`,
-        backgroundSize: 'cover', backgroundPosition: 'center',
-        minHeight: 230, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
-        padding: '44px 40px 36px',
+        position: 'relative', borderRadius: 20, overflow: 'hidden', marginBottom: 24,
+        backgroundImage: `linear-gradient(145deg, rgba(6,15,10,0.80) 0%, rgba(18,48,30,0.68) 50%, rgba(8,20,14,0.60) 100%), url('/photomosquee.png')`,
+        backgroundSize: 'cover', backgroundPosition: 'center 30%',
+        display: 'flex', flexDirection: 'column', justifyContent: 'flex-start',
+        padding: '28px 36px 24px',
+        border: '1px solid rgba(200,168,75,0.14)',
+        boxShadow: '0 6px 28px rgba(0,0,0,0.22)',
       }}>
-        <IslamicPattern opacity={0.08} color={gold} />
-        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, transparent, ${gold}, ${goldLight}, ${gold}, transparent)` }} />
-
-        {/* Watermark verse */}
-        <p style={{
-          position: 'absolute', top: 22, right: 36, margin: 0, pointerEvents: 'none',
-          fontFamily: "'Scheherazade New', serif", fontSize: 18,
-          color: 'rgba(200,168,75,0.16)', direction: 'rtl',
-        }}>
-          وَمَا يَنطِقُ عَنِ الْهَوَىٰ · إِنْ هُوَ إِلَّا وَحْيٌ يُوحَىٰ
-        </p>
+        <IslamicPattern opacity={0.07} color={gold} />
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, transparent, ${gold}, ${goldLight}, ${gold}, transparent)` }} />
 
         <div style={{ position: 'relative' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-            <svg width="10" height="10" viewBox="0 0 20 20">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+            <div style={{ height: 1, width: 18, background: 'rgba(200,168,75,0.5)' }} />
+            <svg width="7" height="7" viewBox="0 0 20 20">
               <polygon points="10,1 12,8 19,8 13,12 15,19 10,15 5,19 7,12 1,8 8,8" fill={gold} />
             </svg>
-            <span style={{ fontSize: 10, color: 'rgba(224,200,112,0.8)', letterSpacing: '0.2em', textTransform: 'uppercase', fontWeight: 600 }}>
-              Paroles prophétiques &amp; Invocations
-            </span>
+            <div style={{ height: 1, width: 18, background: 'rgba(200,168,75,0.5)' }} />
           </div>
-          <h1 style={{ margin: '0 0 10px', fontSize: 'clamp(28px,4vw,42px)', fontWeight: 700, color: '#fff', fontFamily: "'Playfair Display', serif", letterSpacing: '-0.02em' }}>
-            Hadith &amp; Du'a
-          </h1>
-          <p style={{ margin: 0, fontSize: 14, color: 'rgba(255,255,255,0.55)', lineHeight: 1.65, maxWidth: 480 }}>
-            Une lumière prophétique pour chaque instant de votre vie quotidienne.
-          </p>
+          <div style={{ borderLeft: `3px solid rgba(200,168,75,0.75)`, paddingLeft: 16 }}>
+            <span style={{ fontSize: 10, color: 'rgba(224,200,112,0.8)', letterSpacing: '0.2em', textTransform: 'uppercase', fontWeight: 600, display: 'block', marginBottom: 6 }}>
+              {t('hadith_extra.prophetic_label')}
+            </span>
+            <h1 style={{ margin: '0 0 8px', fontSize: 'clamp(22px,4vw,32px)', fontWeight: 700, color: '#fff', fontFamily: "'Cairo', sans-serif", letterSpacing: '-0.01em' }}>
+              Hadith &amp; Du'a
+            </h1>
+            <p style={{ margin: 0, fontSize: 13, color: 'rgba(255,255,255,0.55)', lineHeight: 1.6, maxWidth: 480 }}>
+              {t('hadith_extra.subtitle_hero')}
+            </p>
+          </div>
         </div>
       </div>
 
@@ -247,7 +258,7 @@ export default function HadithDua() {
                   <polygon points="10,1 12,8 19,8 13,12 15,19 10,15 5,19 7,12 1,8 8,8" fill={gold} />
                 </svg>
                 <span style={{ fontSize: 10.5, fontWeight: 800, color: gold, textTransform: 'uppercase', letterSpacing: '0.15em' }}>
-                  Hadith du Jour
+                  {t('hadith_extra.hadith_of_day_label')}
                 </span>
               </div>
               <button
@@ -260,7 +271,7 @@ export default function HadithDua() {
             {/* Large Arabic */}
             <p style={{
               margin: '0 0 12px', textAlign: 'right', direction: 'rtl',
-              fontFamily: "'Scheherazade New', 'Amiri', serif",
+              fontFamily: "'Cairo', sans-serif",
               fontSize: 'clamp(28px,5vw,40px)',
               color: isDark ? goldLight : '#1B3022',
               lineHeight: 1.8, letterSpacing: '0.01em',
@@ -275,7 +286,7 @@ export default function HadithDua() {
             <p style={{ margin: '0 0 10px', fontSize: 12.5, color: gold, fontStyle: 'italic' }}>
               {FEATURED_HADITH.transliteration}
             </p>
-            <p style={{ margin: '0 0 14px', fontSize: 16, fontStyle: 'italic', color: C.textMid, lineHeight: 1.75, fontFamily: "'Inter', sans-serif" }}>
+            <p style={{ margin: '0 0 14px', fontSize: 16, fontStyle: 'italic', color: C.textMid, lineHeight: 1.75, fontFamily: "'Cairo', sans-serif" }}>
               « {displayLang === 'en' && FEATURED_HADITH.english ? FEATURED_HADITH.english : FEATURED_HADITH.french} »
             </p>
             <p style={{ margin: 0, fontSize: 11.5, color: C.textLight }}>{FEATURED_HADITH.source}</p>
@@ -292,7 +303,7 @@ export default function HadithDua() {
               <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
             </svg>
             <input
-              type="text" placeholder="Rechercher un hadith ou une invocation..."
+              type="text" placeholder={t('hadith_extra.search_placeholder')}
               value={search} onChange={e => setSearch(e.target.value)}
               style={{ flex: 1, padding: '13px 0', background: 'transparent', border: 'none', outline: 'none', color: C.textDark, fontSize: 13 }}
             />
@@ -327,14 +338,14 @@ export default function HadithDua() {
               fontSize: 13, fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s',
               boxShadow: activeTab === tab ? `0 4px 14px rgba(46,100,67,0.25)` : 'none',
             }}>
-              {tab === 'hadiths' ? 'Hadiths' : "Du'as"}
+              {tab === 'hadiths' ? t('hadith_extra.tab_hadiths') : t('hadith_extra.tab_duas')}
             </button>
           ))}
         </div>
 
         {/* ── THEME FILTERS ─────────────────────────────────────────────── */}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 22 }}>
-          {THEME_FILTERS.map(tf => (
+          {THEME_IDS.map(tf => (
             <button key={tf} onClick={() => setThemeFilter(tf)} style={{
               background: themeFilter === tf ? `${themeColors[tf] || gold}18` : (isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)'),
               color: themeFilter === tf ? (themeColors[tf] || gold) : C.textMid,
@@ -342,7 +353,7 @@ export default function HadithDua() {
               borderRadius: 20, padding: '5px 14px', fontSize: 11.5,
               fontWeight: themeFilter === tf ? 700 : 400, cursor: 'pointer', transition: 'all 0.15s',
             }}>
-              {tf}
+              {t(THEME_I18N_KEYS[tf] || 'hadith_extra.filter_all')}
             </button>
           ))}
         </div>
@@ -352,8 +363,8 @@ export default function HadithDua() {
           filteredHadiths.length === 0
             ? <div style={{ ...glass({ padding: '48px 24px', textAlign: 'center' }), position: 'relative', overflow: 'hidden' }}>
                 <IslamicPattern opacity={isDark ? 0.04 : 0.03} />
-                <p style={{ fontFamily: "'Scheherazade New', serif", fontSize: 28, color: C.textLight, margin: '0 0 8px', direction: 'rtl' }}>لا نتائج</p>
-                <p style={{ color: C.textMid, margin: 0, fontSize: 13 }}>Aucun hadith ne correspond à votre recherche.</p>
+                <p style={{ fontFamily: "'Cairo', sans-serif", fontSize: 28, color: C.textLight, margin: '0 0 8px', direction: 'rtl' }}>لا نتائج</p>
+                <p style={{ color: C.textMid, margin: 0, fontSize: 13 }}>{t('hadith_extra.no_hadith')}</p>
               </div>
             : filteredHadiths.map(h => renderCard(h))
         )}
@@ -362,8 +373,8 @@ export default function HadithDua() {
           filteredDuas.length === 0
             ? <div style={{ ...glass({ padding: '48px 24px', textAlign: 'center' }), position: 'relative', overflow: 'hidden' }}>
                 <IslamicPattern opacity={isDark ? 0.04 : 0.03} />
-                <p style={{ fontFamily: "'Scheherazade New', serif", fontSize: 28, color: C.textLight, margin: '0 0 8px', direction: 'rtl' }}>لا نتائج</p>
-                <p style={{ color: C.textMid, margin: 0, fontSize: 13 }}>Aucune invocation ne correspond à votre recherche.</p>
+                <p style={{ fontFamily: "'Cairo', sans-serif", fontSize: 28, color: C.textLight, margin: '0 0 8px', direction: 'rtl' }}>لا نتائج</p>
+                <p style={{ color: C.textMid, margin: 0, fontSize: 13 }}>{t('hadith_extra.no_dua')}</p>
               </div>
             : filteredDuas.map(d => renderCard(d))
         )}

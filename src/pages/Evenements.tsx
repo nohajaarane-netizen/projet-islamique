@@ -1,5 +1,6 @@
-import { useState, useEffect, CSSProperties } from 'react';
+﻿import { useState, useEffect, CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
+import { FaTimes } from 'react-icons/fa';
 import { useTheme } from '../context/ThemeContext';
 import { lightTheme, darkTheme } from '../theme/colors';
 import { useLanguage } from '../hooks/useLanguage';
@@ -132,7 +133,6 @@ export default function Evenements() {
   const { language } = useLanguage();
   const C = theme === 'light' ? lightTheme : darkTheme;
   const isAr = language === 'ar';
-  const d = (fr: string, en: string, ar: string) => language === 'en' ? en : isAr ? ar : fr;
 
   const [events, setEvents] = useState<Event[]>(() => loadEvents());
   const [showForm, setShowForm] = useState(false);
@@ -151,7 +151,7 @@ export default function Evenements() {
   const inputStyle: CSSProperties = {
     width: '100%', padding: '11px 14px', borderRadius: 12,
     border: `1px solid ${C.border}`, background: C.cardBg2,
-    color: C.textDark, fontSize: 14, fontFamily: 'Inter, sans-serif',
+    color: C.textDark, fontSize: 14, fontFamily: "'Cairo', sans-serif",
     outline: 'none', boxSizing: 'border-box',
   };
 
@@ -164,7 +164,7 @@ export default function Evenements() {
   };
 
   const deleteEvent = (id: string) => {
-    if (!window.confirm(d('Supprimer cet événement ?', 'Delete this event?', 'حذف هذا الحدث؟'))) return;
+    if (!window.confirm(t('evenements_extra.delete_confirm'))) return;
     setEvents((prev) => prev.filter((e) => e.id !== id));
   };
 
@@ -174,39 +174,34 @@ export default function Evenements() {
   const sorted = sortByDate(events);
 
   return (
-    <div style={{ fontFamily: 'Inter, sans-serif', minHeight: '100vh', background: C.pageBg, direction: isAr ? 'rtl' : 'ltr' }}>
+    <div style={{ fontFamily: "'Cairo', sans-serif", minHeight: '100vh', background: C.pageBg, direction: isAr ? 'rtl' : 'ltr' }}>
 
       {/* ── HERO ─────────────────────────────────────────────────────────────── */}
       <div style={{
-        backgroundImage: `linear-gradient(160deg, rgba(12,34,24,0.96) 0%, rgba(26,61,40,0.90) 55%, rgba(14,45,30,0.96) 100%), url('/photomosquee.png')`,
-        backgroundSize: 'cover', backgroundPosition: 'center',
-        padding: '64px 24px 56px', position: 'relative', overflow: 'hidden',
+        backgroundImage: `linear-gradient(160deg, rgba(10,26,18,0.82) 0%, rgba(20,50,32,0.70) 55%, rgba(12,32,22,0.82) 100%), url('/photomosquee.png')`,
+        backgroundSize: 'cover', backgroundPosition: 'center 30%',
+        padding: '34px 24px 30px', position: 'relative', overflow: 'hidden',
+        borderBottom: '1px solid rgba(200,168,75,0.2)',
+        boxShadow: '0 4px 24px rgba(0,0,0,0.2)',
       }}>
-        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'linear-gradient(90deg, transparent, #C8A84B, #E0C870, #C8A84B, transparent)' }} />
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: 'linear-gradient(90deg, transparent, #C8A84B 20%, #E0C870 50%, #C8A84B 80%, transparent)' }} />
         <IslamicPattern />
-        {isAr && (
-          <div style={{
-            position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontFamily: "'Scheherazade New', serif", fontSize: 'clamp(30px,7vw,68px)',
-            color: '#ffffff', opacity: 0.04, pointerEvents: 'none', userSelect: 'none',
-            textAlign: 'center', padding: '0 24px', letterSpacing: 4,
-          }}>
-            وَسَارِعُوا إِلَىٰ مَغْفِرَةٍ مِّن رَّبِّكُمْ
-          </div>
-        )}
         <div style={{ maxWidth: 820, margin: '0 auto', position: 'relative', zIndex: 1 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 20 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 20 }}>
             <div>
-              <h1 style={{
-                fontFamily: isAr ? "'Scheherazade New', serif" : "'Playfair Display', serif",
-                fontSize: 'clamp(28px,5vw,44px)', fontWeight: 700, color: '#F5F0E2',
-                margin: '0 0 10px', letterSpacing: isAr ? 1 : 0.5,
-              }}>
-                {t('evenements.title', d('Événements', 'Events', 'الأحداث'))}
-              </h1>
-              <p style={{ color: 'rgba(168,196,176,0.9)', fontSize: 15, margin: 0 }}>
-                {d('Restez informé des prochains événements islamiques', 'Stay informed about upcoming Islamic events', 'ابق على اطلاع بالأحداث الإسلامية القادمة')}
-              </p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                <div style={{ height: 1, width: 18, background: 'rgba(200,168,75,0.5)' }} />
+                <svg width="7" height="7" viewBox="0 0 20 20"><polygon points="10,1 12,8 19,8 13,12 15,19 10,15 5,19 7,12 1,8 8,8" fill="#C8A84B" /></svg>
+                <div style={{ height: 1, width: 18, background: 'rgba(200,168,75,0.5)' }} />
+              </div>
+              <div style={{ borderLeft: '3px solid rgba(200,168,75,0.75)', paddingLeft: 16 }}>
+                <h1 style={{ fontFamily: "'Cairo', sans-serif", fontSize: 'clamp(22px,4vw,34px)', fontWeight: 700, color: '#F5F0E2', margin: '0 0 7px', letterSpacing: '-0.01em' }}>
+                  {t('evenements.title')}
+                </h1>
+                <p style={{ color: 'rgba(168,196,176,0.85)', fontSize: 13.5, margin: 0 }}>
+                  {t('evenements_extra.hero_subtitle')}
+                </p>
+              </div>
             </div>
             <button
               onClick={() => setShowForm((v) => !v)}
@@ -218,11 +213,11 @@ export default function Evenements() {
                 borderRadius: 14, padding: '13px 26px',
                 color: showForm ? '#E0C870' : '#1a1a0a',
                 fontSize: 14, fontWeight: 700, cursor: 'pointer',
-                fontFamily: 'Inter, sans-serif', flexShrink: 0, transition: 'all 0.3s',
+                fontFamily: "'Cairo', sans-serif", flexShrink: 0, transition: 'all 0.3s',
               }}
             >
               <span style={{ fontSize: 20, lineHeight: 1, fontWeight: 300 }}>{showForm ? '×' : '+'}</span>
-              {showForm ? d('Fermer', 'Close', 'إغلاق') : d('Ajouter', 'Add', 'إضافة')}
+              {showForm ? t('evenements_extra.close_btn') : t('evenements_extra.add_btn')}
             </button>
           </div>
         </div>
@@ -236,40 +231,40 @@ export default function Evenements() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24 }}>
               <GoldStar size={18} />
               <span style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 1.8, color: '#C8A84B', fontWeight: 700 }}>
-                {d('Nouvel événement', 'New Event', 'حدث جديد')}
+                {t('evenements_extra.new_event')}
               </span>
             </div>
             <div style={{ marginBottom: 16 }}>
               <label style={{ display: 'block', fontSize: 11, color: C.textMid, marginBottom: 6, textTransform: 'uppercase', letterSpacing: 1, fontWeight: 600 }}>
-                {d('Titre', 'Title', 'العنوان')}
+                {t('evenements_extra.title_label')}
               </label>
-              <input type="text" placeholder={d("Titre de l'événement", 'Event title', 'عنوان الحدث')}
+              <input type="text" placeholder={t('evenements_extra.title_placeholder')}
                 value={newEvent.title} onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })} style={inputStyle} />
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 16 }}>
               <div>
                 <label style={{ display: 'block', fontSize: 11, color: C.textMid, marginBottom: 6, textTransform: 'uppercase', letterSpacing: 1, fontWeight: 600 }}>
-                  {d('Date', 'Date', 'التاريخ')}
+                  {t('evenements_extra.date_label')}
                 </label>
                 <input type="date" value={newEvent.date} onChange={(e) => setNewEvent({ ...newEvent, date: e.target.value })} style={inputStyle} />
               </div>
               <div>
                 <label style={{ display: 'block', fontSize: 11, color: C.textMid, marginBottom: 6, textTransform: 'uppercase', letterSpacing: 1, fontWeight: 600 }}>
-                  {d('Heure', 'Time', 'الوقت')}
+                  {t('evenements_extra.time_label')}
                 </label>
                 <input type="time" value={newEvent.time} onChange={(e) => setNewEvent({ ...newEvent, time: e.target.value })} style={inputStyle} />
               </div>
             </div>
             <div style={{ marginBottom: 16 }}>
               <label style={{ display: 'block', fontSize: 11, color: C.textMid, marginBottom: 6, textTransform: 'uppercase', letterSpacing: 1, fontWeight: 600 }}>
-                {d('Lieu', 'Location', 'المكان')}
+                {t('evenements_extra.location_label')}
               </label>
-              <input type="text" placeholder={d("Lieu de l'événement", 'Event location', 'مكان الحدث')}
+              <input type="text" placeholder={t('evenements_extra.location_placeholder')}
                 value={newEvent.location} onChange={(e) => setNewEvent({ ...newEvent, location: e.target.value })} style={inputStyle} />
             </div>
             <div style={{ marginBottom: 24 }}>
               <label style={{ display: 'block', fontSize: 11, color: C.textMid, marginBottom: 10, textTransform: 'uppercase', letterSpacing: 1, fontWeight: 600 }}>
-                {d('Catégorie', 'Category', 'الفئة')}
+                {t('evenements_extra.category_label')}
               </label>
               <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                 {CATEGORIES.map((cat) => {
@@ -283,7 +278,7 @@ export default function Evenements() {
                         color: active ? CATEGORY_COLORS[cat] : C.textMid,
                         fontSize: isAr ? 15 : 13, fontWeight: active ? 700 : 500,
                         cursor: 'pointer', transition: 'all 0.2s',
-                        fontFamily: isAr ? "'Scheherazade New', serif" : 'Inter, sans-serif',
+                        fontFamily: "'Cairo', sans-serif",
                       }}
                     >
                       {getCategoryLabel(cat)}
@@ -298,9 +293,9 @@ export default function Evenements() {
                 border: 'none', borderRadius: 12, padding: '13px 28px', color: '#fff',
                 fontSize: 15, fontWeight: 600, width: '100%', letterSpacing: 0.3,
                 cursor: newEvent.title.trim() && newEvent.date ? 'pointer' : 'not-allowed',
-                fontFamily: isAr ? "'Scheherazade New', serif" : 'Inter, sans-serif',
+                fontFamily: "'Cairo', sans-serif",
               }}>
-              {d("Enregistrer l'événement", 'Save event', 'حفظ الحدث')}
+              {t('evenements_extra.save_event')}
             </button>
           </div>
         )}
@@ -308,11 +303,11 @@ export default function Evenements() {
         {/* ── EVENT LIST ───────────────────────────────────────────────────── */}
         {sorted.length === 0 ? (
           <div style={{ ...card(), padding: '72px 28px', textAlign: 'center' }}>
-            <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 20, color: C.textMid, margin: '0 0 8px' }}>
-              {d('Aucun événement', 'No events', 'لا توجد أحداث')}
+            <p style={{ fontFamily: "'Cairo', sans-serif", fontSize: 20, color: C.textMid, margin: '0 0 8px' }}>
+              {t('evenements_extra.no_events_title')}
             </p>
             <p style={{ color: C.textLight, fontSize: 14, margin: 0 }}>
-              {t('evenements.no_events', d('Ajoutez votre premier événement islamique.', 'Add your first Islamic event.', 'أضف حدثك الإسلامي الأول.'))}
+              {t('evenements_extra.no_events_desc')}
             </p>
           </div>
         ) : (
@@ -332,20 +327,20 @@ export default function Evenements() {
                     display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                     gap: 1, boxShadow: `0 4px 12px ${catColor}40`,
                   }}>
-                    <span style={{ fontSize: 24, fontWeight: 800, color: '#fff', lineHeight: 1, fontFamily: "'Playfair Display', serif" }}>{day}</span>
+                    <span style={{ fontSize: 24, fontWeight: 800, color: '#fff', lineHeight: 1, fontFamily: "'Cairo', sans-serif" }}>{day}</span>
                     <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.82)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.8 }}>{month}</span>
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6, flexWrap: 'wrap' }}>
                       <span style={{
-                        fontFamily: "'Playfair Display', serif", fontSize: 17, fontWeight: 700,
+                        fontFamily: "'Cairo', sans-serif", fontSize: 17, fontWeight: 700,
                         color: C.textDark, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                       }}>{ev.title}</span>
                       <span style={{
                         fontSize: 11, fontWeight: 700, color: catColor, background: `${catColor}18`,
                         border: `1px solid ${catColor}44`, borderRadius: 20, padding: '3px 10px',
                         whiteSpace: 'nowrap', textTransform: 'uppercase', letterSpacing: 0.5,
-                        fontFamily: isAr ? "'Scheherazade New', serif" : 'Inter, sans-serif',
+                        fontFamily: "'Cairo', sans-serif",
                         fontSize: isAr ? 13 : 11,
                       } as CSSProperties}>
                         {getCategoryLabel(ev.category)}
@@ -364,7 +359,7 @@ export default function Evenements() {
                       )}
                     </div>
                   </div>
-                  <button onClick={() => deleteEvent(ev.id)} title={d('Supprimer', 'Delete', 'حذف')}
+                  <button onClick={() => deleteEvent(ev.id)} title={t('common.delete')}
                     style={{
                       flexShrink: 0, background: 'none', border: `1px solid ${C.border}`, borderRadius: 10,
                       width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -372,7 +367,7 @@ export default function Evenements() {
                     }}
                     onMouseOver={(e) => { e.currentTarget.style.background = '#c0392b1a'; e.currentTarget.style.borderColor = '#c0392b'; e.currentTarget.style.color = '#c0392b'; }}
                     onMouseOut={(e)  => { e.currentTarget.style.background = 'none'; e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.textLight; }}
-                  >✕</button>
+                  ><FaTimes /></button>
                 </div>
               );
             })}

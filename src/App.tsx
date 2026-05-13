@@ -2,6 +2,7 @@ import { ThemeProvider } from './context/ThemeContext';
 import { LanguageProvider } from './context/LanguageContext';
 import { NavigationContext } from './context/NavigationContext';
 import { useState } from 'react';
+import { useLanguage } from './hooks/useLanguage';
 import { Sidebar } from './components/layout/Sidebar';
 import Header from './components/layout/Header';
 import Accueil from './pages/Accueil';
@@ -23,7 +24,9 @@ function AppContent() {
   const [activePage, setActivePage] = useState('accueil');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { theme } = useTheme();
+  const { language } = useLanguage();
   const C = theme === 'light' ? lightTheme : darkTheme;
+  const isRTL = language === 'ar';
 
   const handleNavigate = (pageId: string) => {
     setActivePage(pageId);
@@ -50,7 +53,7 @@ function AppContent() {
 
   return (
     <NavigationContext.Provider value={handleNavigate}>
-      <div className="app-layout" style={{ background: C.pageBg }}>
+      <div className="app-layout" dir={isRTL ? 'rtl' : 'ltr'} style={{ background: C.pageBg }}>
         {/* Mobile overlay */}
         <div
           className={`sidebar-overlay ${sidebarOpen ? 'visible' : ''}`}

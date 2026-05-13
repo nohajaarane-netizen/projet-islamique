@@ -1,8 +1,10 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+﻿import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '../context/ThemeContext';
 import { lightTheme, darkTheme } from '../theme/colors';
 import { useLanguage } from '../hooks/useLanguage';
 import { allNames, AsmaName } from '../data/asmaNamesFull';
+import { FaHeart, FaSearch, FaCheck } from 'react-icons/fa';
 
 // ─── Day-of-year name rotation ────────────────────────────────────────────────
 
@@ -66,7 +68,7 @@ function ProgressRing({ value, total, size = 100 }: { value: number; total: numb
         </linearGradient>
       </defs>
       <text x={size / 2} y={size / 2 - 5} textAnchor="middle"
-        fill="#C8A84B" fontSize={size * 0.18} fontWeight={700} fontFamily="'Playfair Display', serif">
+        fill="#C8A84B" fontSize={size * 0.18} fontWeight={700} fontFamily="'Cairo', sans-serif">
         {value}
       </text>
       <text x={size / 2} y={size / 2 + 12} textAnchor="middle"
@@ -82,6 +84,7 @@ function ProgressRing({ value, total, size = 100 }: { value: number; total: numb
 const ITEMS_PER_PAGE = 12;
 
 export default function AsmaUlHusna() {
+  const { t } = useTranslation();
   const { theme } = useTheme();
   const { language } = useLanguage();
   const C = theme === 'light' ? lightTheme : darkTheme;
@@ -197,19 +200,19 @@ export default function AsmaUlHusna() {
   // ── Filter labels ────────────────────────────────────────────────────────
 
   const filterLabels: Record<string, string> = {
-    all:     language === 'en' ? 'All'       : language === 'ar' ? 'الكل'     : 'Tous',
-    learned: language === 'en' ? 'Learned'   : language === 'ar' ? 'محفوظة'   : 'Appris',
-    toLearn: language === 'en' ? 'To learn'  : language === 'ar' ? 'للتعلم'   : 'À apprendre',
-    fav:     language === 'en' ? 'Favorites' : language === 'ar' ? 'المفضلة'  : 'Favoris',
+    all:     t('asma_extra.filter_all'),
+    learned: t('asma_extra.filter_learned'),
+    toLearn: t('asma_extra.filter_to_learn'),
+    fav:     t('asma_extra.filter_fav'),
   };
 
-  const heroTitle   = language === 'ar' ? 'أسماء الله الحسنى' : language === 'en' ? "Allah's Most Beautiful Names" : "Les 99 Noms d'Allah";
-  const heroBadge   = language === 'ar' ? '٩٩ اسماً' : '99 Names';
-  const dailyLabel  = language === 'ar' ? 'اسم اليوم' : language === 'en' ? "Name of the Day" : "Nom du Jour";
-  const searchPh    = language === 'ar' ? 'ابحث عن اسم...' : language === 'en' ? 'Search a name...' : 'Rechercher un nom...';
-  const learnedLbl  = language === 'ar' ? 'تم الحفظ' : language === 'en' ? 'Learned' : 'Appris';
-  const markLbl     = language === 'ar' ? 'حفظ' : language === 'en' ? 'Mark as learned' : 'Marquer comme appris';
-  const progressLbl = language === 'ar' ? 'تقدمك' : language === 'en' ? 'Your Progress' : 'Votre Progression';
+  const heroTitle   = t('asma.title');
+  const heroBadge   = t('asma_extra.names_badge');
+  const dailyLabel  = t('asma_extra.daily_name');
+  const searchPh    = t('asma_extra.search_ph');
+  const learnedLbl  = t('asma_extra.learned_label');
+  const markLbl     = t('asma_extra.mark_learned');
+  const progressLbl = t('asma_extra.progress_label');
 
   // ─────────────────────────────────────────────────────────────────────────
   // ── MODAL ────────────────────────────────────────────────────────────────
@@ -310,7 +313,7 @@ export default function AsmaUlHusna() {
         <p style={{
           margin: '0 0 8px',
           fontSize: 'clamp(60px, 14vw, 96px)',
-          fontFamily: "'Scheherazade New', 'Amiri', serif",
+          fontFamily: "'Cairo', sans-serif",
           color: goldLight,
           lineHeight: 1.3,
           direction: 'rtl',
@@ -326,7 +329,7 @@ export default function AsmaUlHusna() {
         {/* Transliteration */}
         <p style={{
           margin: '0 0 8px', fontSize: 22, fontWeight: 600,
-          fontFamily: "'Playfair Display', serif",
+          fontFamily: "'Cairo', sans-serif",
           color: 'rgba(255,255,255,0.92)', letterSpacing: '0.02em',
         }}>
           {selected.translit}
@@ -363,7 +366,7 @@ export default function AsmaUlHusna() {
           borderRadius: 12, padding: '14px 18px', marginBottom: 28, textAlign: 'left',
         }}>
           <p style={{ margin: '0 0 4px', fontSize: 10, color: gold, textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 700 }}>
-            {language === 'ar' ? 'تأمل' : language === 'en' ? 'Reflection' : 'Réflexion'}
+            {t('hadith_extra.reflection')}
           </p>
           <p style={{ margin: 0, fontSize: 12, color: 'rgba(255,255,255,0.55)', lineHeight: 1.7, fontStyle: 'italic' }}>
             {language === 'en'
@@ -389,7 +392,7 @@ export default function AsmaUlHusna() {
               boxShadow: learned.includes(selected.id) ? `0 4px 16px rgba(200,168,75,0.3)` : 'none',
             }}
           >
-            {learned.includes(selected.id) ? `✓ ${learnedLbl}` : markLbl}
+            {learned.includes(selected.id) ? <><FaCheck style={{marginRight:4}}/>{learnedLbl}</> : markLbl}
           </button>
           <button
             onClick={(e) => toggleFavorite(selected.id, e)}
@@ -401,14 +404,12 @@ export default function AsmaUlHusna() {
               color: favorites.includes(selected.id) ? '#e74c3c' : 'rgba(255,255,255,0.35)',
               transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}
-          >
-            ♥
-          </button>
+          ><FaHeart /></button>
         </div>
 
         {/* Keyboard hint */}
         <p style={{ margin: '16px 0 0', fontSize: 10, color: 'rgba(255,255,255,0.2)', letterSpacing: '0.05em' }}>
-          {language === 'en' ? '← → arrow keys to navigate' : '← → pour naviguer entre les noms'}
+          {t('asma_extra.keyboard_hint')}
         </p>
       </div>
     </div>
@@ -425,67 +426,85 @@ export default function AsmaUlHusna() {
       {/* ── HERO ─────────────────────────────────────────────────────────── */}
       <div style={{
         position: 'relative', overflow: 'hidden',
-        borderRadius: 28, marginBottom: 20,
-        background: 'linear-gradient(145deg, #0A1A0E 0%, #162818 40%, #1B3828 80%, #0E1E14 100%)',
-        minHeight: 280,
-        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-        padding: '48px 40px 40px',
+        borderRadius: 20, marginBottom: 20,
+        backgroundImage: `linear-gradient(145deg, rgba(10,26,14,0.82) 0%, rgba(22,40,24,0.70) 40%, rgba(27,56,40,0.62) 80%, rgba(14,30,20,0.72) 100%), url('/photomosquee.png')`,
+        backgroundSize: 'cover', backgroundPosition: 'center 30%',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start',
+        padding: '28px 36px 24px',
         textAlign: 'center',
+        border: '1px solid rgba(200,168,75,0.14)',
+        boxShadow: '0 6px 28px rgba(0,0,0,0.22)',
       }}>
         {/* Islamic geometric pattern */}
-        <IslamicPattern opacity={0.09} color="#C8A84B" />
+        <IslamicPattern opacity={0.07} color="#C8A84B" />
 
         {/* Gold top line */}
         <div style={{
-          position: 'absolute', top: 0, left: 0, right: 0, height: 3,
+          position: 'absolute', top: 0, left: 0, right: 0, height: 2,
           background: `linear-gradient(90deg, transparent 0%, ${gold} 30%, ${goldLight} 50%, ${gold} 70%, transparent 100%)`,
         }} />
 
-        {/* 99 badge */}
-        <span style={{
-          display: 'inline-flex', alignItems: 'center', gap: 6,
-          background: 'rgba(200,168,75,0.12)', border: '1px solid rgba(200,168,75,0.3)',
-          borderRadius: 30, padding: '5px 16px', marginBottom: 18,
-          fontSize: 11, fontWeight: 700, color: gold, letterSpacing: '0.12em', textTransform: 'uppercase',
-        }}>
-          <svg width="10" height="10" viewBox="0 0 20 20">
-            <polygon points="10,1 12,8 19,8 13,12 15,19 10,15 5,19 7,12 1,8 8,8" fill={gold} />
-          </svg>
-          {heroBadge}
-        </span>
+        {/* Ornament */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+          <div style={{ height: 1, width: 18, background: 'rgba(200,168,75,0.5)' }} />
+          <svg width="7" height="7" viewBox="0 0 20 20"><polygon points="10,1 12,8 19,8 13,12 15,19 10,15 5,19 7,12 1,8 8,8" fill="#C8A84B" /></svg>
+          <div style={{ height: 1, width: 18, background: 'rgba(200,168,75,0.5)' }} />
+        </div>
 
-        {/* Arabic title — Scheherazade New */}
+        {/* Allah icon + 99 badge — compact row */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 14 }}>
+          <div style={{
+            width: 56, height: 56,
+            borderRadius: '50%',
+            background: `radial-gradient(circle at 40% 35%, rgba(240,210,100,0.18), rgba(200,168,75,0.06))`,
+            border: `1px solid rgba(200,168,75,0.35)`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: `0 0 18px rgba(200,168,75,0.15)`,
+            animation: 'pulse-glow 3s ease-in-out infinite',
+          }}>
+            <span style={{ fontFamily: "'Cairo', sans-serif", fontSize: 26, color: goldLight, lineHeight: 1 }}>
+              الله
+            </span>
+          </div>
+          <div style={{ textAlign: 'left' }}>
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              background: 'rgba(200,168,75,0.12)', border: '1px solid rgba(200,168,75,0.3)',
+              borderRadius: 30, padding: '3px 12px',
+              fontSize: 10, fontWeight: 700, color: gold, letterSpacing: '0.12em', textTransform: 'uppercase',
+            }}>
+              {heroBadge}
+            </span>
+          </div>
+        </div>
+
+        {/* Arabic title */}
         <p style={{
-          margin: '0 0 6px',
-          fontSize: 'clamp(28px, 5vw, 52px)',
-          fontFamily: "'Scheherazade New', 'Amiri', serif",
+          margin: '0 0 4px',
+          fontSize: 'clamp(22px, 4vw, 36px)',
+          fontFamily: "'Cairo', sans-serif",
           color: goldLight, lineHeight: 1.4,
           direction: 'rtl', letterSpacing: '0.01em',
-          textShadow: `0 0 30px rgba(200,168,75,0.25)`,
         }}>
           أَسْمَاءُ اللَّهِ الْحُسْنَى
         </p>
 
         {/* Latin title */}
         <h1 style={{
-          margin: '0 0 6px', fontSize: 'clamp(18px, 3vw, 28px)',
-          fontFamily: "'Playfair Display', serif", fontWeight: 700,
-          color: '#FFFFFF', letterSpacing: '-0.02em',
+          margin: '0 0 4px', fontSize: 'clamp(16px, 3vw, 24px)',
+          fontFamily: "'Cairo', sans-serif", fontWeight: 700,
+          color: '#FFFFFF', letterSpacing: '-0.01em',
         }}>
           {heroTitle}
         </h1>
 
-        <p style={{ margin: '0 0 28px', fontSize: 13, color: 'rgba(255,255,255,0.45)' }}>
-          {language === 'ar'
-            ? '"وَلِلَّهِ الْأَسْمَاءُ الْحُسْنَى فَادْعُوهُ بِهَا" — الأعراف ١٨٠'
-            : language === 'en'
-            ? '"To Allah belong the Most Beautiful Names, so call upon Him by them." — Al-A\'raf 7:180'
-            : '"À Allah appartiennent les plus beaux noms. Invoquez-Le par eux." — Sourate Al-A\'raf 7:180'}
+        <p style={{ margin: '0 0 16px', fontSize: 12.5, color: 'rgba(255,255,255,0.45)' }}>
+          {t('asma_extra.verse_quote')}
         </p>
 
         {/* Progress bar inline */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14, maxWidth: 380 }}>
-          <ProgressRing value={learned.length} total={99} size={72} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14, maxWidth: 360 }}>
+          <ProgressRing value={learned.length} total={99} size={58} />
           <div style={{ flex: 1, textAlign: 'left' }}>
             <p style={{ margin: '0 0 6px', fontSize: 11, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
               {progressLbl}
@@ -508,14 +527,14 @@ export default function AsmaUlHusna() {
       {/* ── STATS ROW ────────────────────────────────────────────────────── */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 20 }}>
         {[
-          { value: learned.length,                  label: language === 'ar' ? 'محفوظة' : language === 'en' ? 'Learned' : 'Appris',    color: C.green },
-          { value: 99 - learned.length,             label: language === 'ar' ? 'متبقية' : language === 'en' ? 'Remaining' : 'Restants', color: C.gold },
-          { value: favorites.length,                label: language === 'ar' ? 'مفضلة' : language === 'en' ? 'Favorites' : 'Favoris',  color: '#e74c3c' },
+          { value: learned.length,      label: t('asma_extra.stats_learned'),   color: C.green },
+          { value: 99 - learned.length, label: t('asma_extra.stats_remaining'), color: C.gold },
+          { value: favorites.length,    label: t('asma_extra.stats_favorites'), color: '#e74c3c' },
         ].map(({ value, label, color }) => (
           <div key={label} style={{
             ...glassCard({ padding: '18px 16px', textAlign: 'center' }),
           }}>
-            <p style={{ margin: '0 0 4px', fontSize: 28, fontWeight: 800, color, fontFamily: "'Playfair Display', serif", lineHeight: 1 }}>
+            <p style={{ margin: '0 0 4px', fontSize: 28, fontWeight: 800, color, fontFamily: "'Cairo', sans-serif", lineHeight: 1 }}>
               {value}
             </p>
             <p style={{ margin: 0, fontSize: 11, color: C.textLight, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
@@ -555,7 +574,7 @@ export default function AsmaUlHusna() {
         <p style={{
           margin: '0 0 4px',
           fontSize: 'clamp(52px, 10vw, 80px)',
-          fontFamily: "'Scheherazade New', 'Amiri', serif",
+          fontFamily: "'Cairo', sans-serif",
           color: isDark ? goldLight : '#1B3022',
           lineHeight: 1.4, direction: 'rtl',
           textShadow: isDark ? `0 0 30px rgba(200,168,75,0.2)` : 'none',
@@ -574,7 +593,7 @@ export default function AsmaUlHusna() {
 
         <p style={{
           margin: '0 0 4px', fontSize: 20, fontWeight: 600,
-          fontFamily: "'Playfair Display', serif",
+          fontFamily: "'Cairo', sans-serif",
           color: C.textDark, letterSpacing: '0.02em',
         }}>
           {dailyName.translit}
@@ -597,7 +616,7 @@ export default function AsmaUlHusna() {
             onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; }}
             onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; }}
           >
-            {language === 'en' ? 'Explore this name' : language === 'ar' ? 'استكشف الاسم' : 'Explorer ce nom'}
+            {t('asma_extra.explore_name')}
           </button>
           <button
             onClick={() => toggleLearned(dailyName.id)}
@@ -611,7 +630,7 @@ export default function AsmaUlHusna() {
               fontSize: 13, fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s',
             }}
           >
-            {learned.includes(dailyName.id) ? `✓ ${learnedLbl}` : markLbl}
+            {learned.includes(dailyName.id) ? <><FaCheck style={{marginRight:4}}/>{learnedLbl}</> : markLbl}
           </button>
         </div>
       </div>
@@ -624,7 +643,7 @@ export default function AsmaUlHusna() {
           display: 'flex', alignItems: 'center', gap: 10,
           ...glassCard({ padding: '0 18px', borderRadius: 40 }),
         }}>
-          <span style={{ color: C.textLight, fontSize: 14 }}>⌕</span>
+          <FaSearch style={{ color: C.textLight, fontSize: 14 }} />
           <input
             type="text"
             placeholder={searchPh}
@@ -634,7 +653,7 @@ export default function AsmaUlHusna() {
               flex: 1, padding: '13px 0',
               background: 'transparent', border: 'none', outline: 'none',
               color: C.textDark, fontSize: 13,
-              fontFamily: language === 'ar' ? "'Tajawal', sans-serif" : "'Inter', sans-serif",
+              fontFamily: language === 'ar' ? "'Cairo', sans-serif" : "'Cairo', sans-serif",
             }}
           />
           {search && (
@@ -669,9 +688,9 @@ export default function AsmaUlHusna() {
       {displayedNames.length === 0 ? (
         <div style={{ ...glassCard({ padding: '60px', textAlign: 'center' }), position: 'relative', overflow: 'hidden' }}>
           <IslamicPattern opacity={0.04} />
-          <p style={{ fontSize: 44, fontFamily: "'Scheherazade New', serif", color: C.textLight, margin: '0 0 8px' }}>بسم الله</p>
+          <p style={{ fontSize: 44, fontFamily: "'Cairo', sans-serif", color: C.textLight, margin: '0 0 8px' }}>بسم الله</p>
           <p style={{ fontSize: 13, color: C.textMid }}>
-            {language === 'en' ? 'No names found for your search.' : 'Aucun nom trouvé pour votre recherche.'}
+            {t('asma_extra.no_results')}
           </p>
         </div>
       ) : (
@@ -736,7 +755,7 @@ export default function AsmaUlHusna() {
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: 9, color: '#0D1810', fontWeight: 800,
                     boxShadow: `0 2px 8px rgba(200,168,75,0.35)`,
-                  }}>✓</span>
+                  }}><FaCheck /></span>
                 ) : (
                   <button
                     onClick={e => toggleFavorite(n.id, e)}
@@ -749,14 +768,14 @@ export default function AsmaUlHusna() {
                     }}
                     onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.2)'; }}
                     onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; }}
-                  >♥</button>
+                  ><FaHeart /></button>
                 )}
 
                 {/* Arabic name — Scheherazade New */}
                 <p style={{
                   margin: '14px 0 8px', textAlign: 'center',
                   fontSize: 34,
-                  fontFamily: "'Scheherazade New', 'Amiri', serif",
+                  fontFamily: "'Cairo', sans-serif",
                   color: isDark ? goldLight : '#1B3022',
                   lineHeight: 1.45, direction: 'rtl',
                   textShadow: isDark ? `0 0 16px rgba(200,168,75,0.12)` : 'none',
@@ -773,7 +792,7 @@ export default function AsmaUlHusna() {
                 {/* Transliteration */}
                 <p style={{
                   margin: '0 0 4px', fontSize: 12, fontWeight: 700,
-                  fontFamily: "'Playfair Display', serif",
+                  fontFamily: "'Cairo', sans-serif",
                   color: C.textDark, textAlign: 'center', letterSpacing: '0.02em',
                 }}>
                   {n.translit}

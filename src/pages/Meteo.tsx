@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../hooks/useLanguage';
 import { lightTheme, darkTheme } from '../theme/colors';
+import { useNavigatePage } from '../context/NavigationContext';
 import axios from 'axios';
 import { config } from '../config';
 
@@ -75,11 +76,48 @@ export default function Meteo() {
   const { language } = useLanguage();
   const C = theme === 'light' ? lightTheme : darkTheme;
   const isAr = language === 'ar';
-  const d = (fr: string, en: string, ar: string) => language === 'en' ? en : isAr ? ar : fr;
 
+  const navigate = useNavigatePage();
   const [weather, setWeather] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [nextPrayer, setNextPrayer] = useState('Asr');
+  const [nextPrayerTime, setNextPrayerTime] = useState('--:--');
+
+  useEffect(() => {
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        axios.get(`https://api.aladhan.com/v1/timings?latitude=${pos.coords.latitude}&longitude=${pos.coords.longitude}&method=4`)
+          .then((res) => {
+            const timings = res.data.data.timings;
+            const prayers = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
+            const now = new Date();
+            const nowMins = now.getHours() * 60 + now.getMinutes();
+            for (const p of prayers) {
+              const clean = (timings[p] || '').replace(/ \(.*\)/, '');
+              const [h, m] = clean.split(':').map(Number);
+              if (h * 60 + m > nowMins) { setNextPrayer(p); setNextPrayerTime(clean); return; }
+            }
+            const clean = (timings['Fajr'] || '').replace(/ \(.*\)/, '');
+            setNextPrayer('Fajr'); setNextPrayerTime(clean);
+          }).catch(() => {});
+      },
+      () => {
+        axios.get('https://api.aladhan.com/v1/timingsByCity?city=Berrechid&country=MA&method=4')
+          .then((res) => {
+            const timings = res.data.data.timings;
+            const prayers = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
+            const now = new Date();
+            const nowMins = now.getHours() * 60 + now.getMinutes();
+            for (const p of prayers) {
+              const clean = (timings[p] || '').replace(/ \(.*\)/, '');
+              const [h, m] = clean.split(':').map(Number);
+              if (h * 60 + m > nowMins) { setNextPrayer(p); setNextPrayerTime(clean); return; }
+            }
+          }).catch(() => {});
+      }
+    );
+  }, []);
 
   const card = (extra?: React.CSSProperties): React.CSSProperties => ({
     background: C.cardBg, border: `1px solid ${C.border}`, borderRadius: 20,
@@ -90,7 +128,7 @@ export default function Meteo() {
   useEffect(() => {
     const fetchWeather = async () => {
       if (!config.OPENWEATHER_API_KEY || config.OPENWEATHER_API_KEY === 'ta_clé_ici') {
-        setError(t('meteo.missing_key', d('Clé API manquante', 'Missing API key', 'مفتاح API مفقود')));
+        setError(t('meteo.missing_key'));
         setLoading(false); return;
       }
       navigator.geolocation.getCurrentPosition(
@@ -100,13 +138,13 @@ export default function Meteo() {
             const url = `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&units=metric&lang=fr&appid=${config.OPENWEATHER_API_KEY}`;
             const response = await axios.get(url);
             setWeather(response.data); setError('');
-          } catch (err) { console.error(err); setError(t('meteo.error', d('Erreur chargement météo', 'Weather loading error', 'خطأ في تحميل الطقس'))); }
+          } catch (err) { console.error(err); setError(t('meteo.error')); }
           finally { setLoading(false); }
         },
         () => {
           axios.get(`https://api.openweathermap.org/data/2.5/weather?q=Berrechid,MA&units=metric&lang=fr&appid=${config.OPENWEATHER_API_KEY}`)
             .then((res) => { setWeather(res.data); setError(''); })
-            .catch(() => setError(t('meteo.geo_denied', d('Géolocalisation refusée', 'Geolocation denied', 'تم رفض تحديد الموقع'))))
+            .catch(() => setError(t('meteo.geo_denied')))
             .finally(() => setLoading(false));
         }
       );
@@ -116,9 +154,9 @@ export default function Meteo() {
 
   if (loading) {
     return (
-      <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 20, background: C.pageBg, fontFamily: 'Inter, sans-serif' }}>
+      <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 20, background: C.pageBg, fontFamily: "'Cairo', sans-serif" }}>
         <div style={{ width: 56, height: 56, borderRadius: '50%', border: `4px solid ${C.border}`, borderTopColor: C.green, animation: 'spin 0.9s linear infinite' }} />
-        <p style={{ margin: 0, fontSize: 15, color: C.textMid }}>{t('meteo.loading', d('Chargement de la météo...', 'Loading weather...', 'جاري تحميل الطقس...'))}</p>
+        <p style={{ margin: 0, fontSize: 15, color: C.textMid }}>{t('meteo.loading')}</p>
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
@@ -126,36 +164,35 @@ export default function Meteo() {
 
   const Hero = () => (
     <div style={{
-      backgroundImage: `linear-gradient(160deg, rgba(12,34,24,0.96) 0%, rgba(26,61,40,0.90) 55%, rgba(14,45,30,0.96) 100%), url('/photomosquee.png')`,
-      backgroundSize: 'cover', backgroundPosition: 'center',
-      padding: '64px 24px 56px', position: 'relative', overflow: 'hidden',
+      backgroundImage: `linear-gradient(160deg, rgba(10,26,18,0.82) 0%, rgba(20,50,32,0.70) 55%, rgba(12,32,22,0.82) 100%), url('/photomosquee.png')`,
+      backgroundSize: 'cover', backgroundPosition: 'center 30%',
+      padding: '34px 24px 30px', position: 'relative', overflow: 'hidden',
+      borderBottom: '1px solid rgba(200,168,75,0.2)',
+      boxShadow: '0 4px 24px rgba(0,0,0,0.2)',
     }}>
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'linear-gradient(90deg, transparent, #C8A84B, #E0C870, #C8A84B, transparent)' }} />
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: 'linear-gradient(90deg, transparent, #C8A84B 20%, #E0C870 50%, #C8A84B 80%, transparent)' }} />
       <IslamicPattern />
-      {isAr && (
-        <div style={{
-          position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontFamily: "'Scheherazade New', serif", fontSize: 'clamp(18px,4vw,48px)',
-          color: '#ffffff', opacity: 0.04, pointerEvents: 'none', userSelect: 'none',
-          textAlign: 'center', padding: '0 24px',
-        }}>
-          هُوَ الَّذِي يُرِيكُمُ الْبَرْقَ خَوْفًا وَطَمَعًا
+      <div style={{ maxWidth: 820, margin: '0 auto', position: 'relative', zIndex: 1 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 10 }}>
+          <div style={{ height: 1, width: 18, background: 'rgba(200,168,75,0.5)' }} />
+          <svg width="7" height="7" viewBox="0 0 20 20"><polygon points="10,1 12,8 19,8 13,12 15,19 10,15 5,19 7,12 1,8 8,8" fill="#C8A84B" /></svg>
+          <div style={{ height: 1, width: 18, background: 'rgba(200,168,75,0.5)' }} />
         </div>
-      )}
-      <div style={{ maxWidth: 820, margin: '0 auto', position: 'relative', zIndex: 1, textAlign: isAr ? 'right' : 'center' }}>
-        <h1 style={{ fontFamily: isAr ? "'Scheherazade New', serif" : "'Playfair Display', serif", fontSize: 'clamp(28px,5vw,44px)', fontWeight: 700, color: '#F5F0E2', margin: '0 0 10px' }}>
-          {t('meteo.title', d('Météo', 'Weather', 'الطقس'))}
-        </h1>
-        <p style={{ color: 'rgba(168,196,176,0.9)', fontSize: 15, margin: 0 }}>
-          {d('Conditions météorologiques en temps réel', 'Real-time weather conditions', 'الأحوال الجوية في الوقت الفعلي')}
-        </p>
+        <div style={{ textAlign: 'center', borderTop: '1px solid rgba(200,168,75,0.12)', borderBottom: '1px solid rgba(200,168,75,0.12)', padding: '12px 0' }}>
+          <h1 style={{ fontFamily: "'Cairo', sans-serif", fontSize: 'clamp(22px,4vw,34px)', fontWeight: 700, color: '#F5F0E2', margin: '0 0 6px', letterSpacing: '-0.01em' }}>
+            {t('meteo.title')}
+          </h1>
+          <p style={{ color: 'rgba(168,196,176,0.85)', fontSize: 13.5, margin: 0 }}>
+            {t('meteo.subtitle')}
+          </p>
+        </div>
       </div>
     </div>
   );
 
   if (error) {
     return (
-      <div style={{ fontFamily: 'Inter, sans-serif', minHeight: '100vh', background: C.pageBg, direction: isAr ? 'rtl' : 'ltr' }}>
+      <div style={{ fontFamily: "'Cairo', sans-serif", minHeight: '100vh', background: C.pageBg, direction: isAr ? 'rtl' : 'ltr' }}>
         <Hero />
         <div style={{ maxWidth: 820, margin: '40px auto', padding: '0 20px' }}>
           <div style={{ ...card(), padding: 48, textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
@@ -179,14 +216,14 @@ export default function Meteo() {
   const country   = weather.sys.country;
 
   const pills = [
-    { label: d('Ressenti', 'Feels like', 'الإحساس'), value: `${feelsLike}°`, icon: <SvgThermometer color={C.green} size={18} /> },
-    { label: d('Humidité', 'Humidity', 'الرطوبة'),   value: `${humidity}%`, icon: <SvgDrop color={C.green} size={18} /> },
-    { label: d('Vent', 'Wind', 'الريح'),             value: `${wind} km/h`, icon: <SvgWind color={C.green} size={18} /> },
-    ...(pressure ? [{ label: d('Pression', 'Pressure', 'الضغط'), value: `${pressure} hPa`, icon: <SvgGauge color={C.green} size={18} /> }] : []),
+    { label: t('meteo.feels_like'), value: `${feelsLike}°`, icon: <SvgThermometer color={C.green} size={18} /> },
+    { label: t('meteo.humidity'),   value: `${humidity}%`, icon: <SvgDrop color={C.green} size={18} /> },
+    { label: t('meteo.wind'),       value: `${wind} km/h`, icon: <SvgWind color={C.green} size={18} /> },
+    ...(pressure ? [{ label: t('meteo.pressure'), value: `${pressure} hPa`, icon: <SvgGauge color={C.green} size={18} /> }] : []),
   ];
 
   return (
-    <div style={{ fontFamily: 'Inter, sans-serif', minHeight: '100vh', background: C.pageBg, direction: isAr ? 'rtl' : 'ltr' }}>
+    <div style={{ fontFamily: "'Cairo', sans-serif", minHeight: '100vh', background: C.pageBg, direction: isAr ? 'rtl' : 'ltr' }}>
       <Hero />
       <div style={{ maxWidth: 820, margin: '0 auto', padding: '32px 20px 60px' }}>
 
@@ -194,11 +231,11 @@ export default function Meteo() {
         <div style={{ ...card(), padding: '40px 36px', marginBottom: 20 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 28 }}>
             <SvgPin color={C.green} size={16} />
-            <span style={{ fontSize: 20, fontWeight: 600, color: C.textDark, fontFamily: "'Playfair Display', serif" }}>{city}, {country}</span>
+            <span style={{ fontSize: 20, fontWeight: 600, color: C.textDark, fontFamily: "'Cairo', sans-serif" }}>{city}, {country}</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 20, marginBottom: 16 }}>
             <WeatherIcon condition={condition} size={88} />
-            <div style={{ fontSize: 68, fontWeight: 800, color: C.textDark, lineHeight: 1, fontFamily: "'Playfair Display', serif", letterSpacing: '-3px' }}>{temp}°</div>
+            <div style={{ fontSize: 68, fontWeight: 800, color: C.textDark, lineHeight: 1, fontFamily: "'Cairo', sans-serif", letterSpacing: '-3px' }}>{temp}°</div>
           </div>
           <p style={{ fontSize: 18, color: C.textMid, textAlign: 'center', margin: '0 0 32px', textTransform: 'capitalize', letterSpacing: 0.5 }}>{condition}</p>
           <div style={{ display: 'grid', gridTemplateColumns: `repeat(${pills.length}, 1fr)`, gap: 12 }}>
@@ -206,7 +243,7 @@ export default function Meteo() {
               <div key={pill.label} style={{ background: C.cardBg2, border: `1px solid ${C.border}`, borderRadius: 16, padding: '16px 10px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
                 <span style={{ color: C.green }}>{pill.icon}</span>
                 <span style={{ fontSize: 15, fontWeight: 700, color: C.textDark }}>{pill.value}</span>
-                <span style={{ fontSize: isAr ? 14 : 10, color: C.textLight, textTransform: isAr ? 'none' : 'uppercase', letterSpacing: isAr ? 0 : 0.8, fontFamily: isAr ? "'Scheherazade New', serif" : 'Inter, sans-serif' }}>
+                <span style={{ fontSize: isAr ? 14 : 10, color: C.textLight, textTransform: isAr ? 'none' : 'uppercase', letterSpacing: isAr ? 0 : 0.8, fontFamily: "'Cairo', sans-serif" }}>
                   {pill.label}
                 </span>
               </div>
@@ -215,41 +252,50 @@ export default function Meteo() {
         </div>
 
         {/* ── PRAYER CARD ──────────────────────────────────────────────────── */}
-        <div style={{ ...card(), padding: '24px 28px', marginBottom: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+        <div style={{ ...card(), padding: '20px 24px', marginBottom: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
           <div>
             <p style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 1.4, color: C.gold, fontWeight: 600, margin: '0 0 6px' }}>
-              {d('Prochaine prière', 'Next prayer', 'الصلاة القادمة')}
+              {t('meteo.next_prayer_label')}
             </p>
-            <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 22, fontWeight: 700, color: C.textDark, margin: '0 0 4px' }}>
-              {d('Asr', 'Asr', 'العصر')}
+            <p style={{ fontFamily: "'Cairo', sans-serif", fontSize: 22, fontWeight: 700, color: C.textDark, margin: '0 0 2px' }}>
+              {t(`salat.${nextPrayer.toLowerCase()}`) || nextPrayer}
             </p>
-            <p style={{ fontSize: 14, color: C.textMid, margin: 0 }}>
-              {d('Consultez la page Horaires pour les détails', 'Check the Prayer Times page for details', 'راجع صفحة مواقيت الصلاة للتفاصيل')}
+            <p style={{ fontSize: 14, color: C.gold, fontWeight: 600, margin: '0 0 4px', fontFamily: "'Cairo', sans-serif" }}>
+              {nextPrayerTime}
+            </p>
+            <p style={{ fontSize: 13, color: C.textMid, margin: 0 }}>
+              {t('meteo.prayer_times_hint')}
             </p>
           </div>
+          <button
+            onClick={() => navigate('horaires')}
+            style={{
+              padding: '10px 18px', background: C.green, border: 'none', borderRadius: 12,
+              color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+              fontFamily: "'Cairo', sans-serif", transition: 'opacity 0.2s', whiteSpace: 'nowrap',
+            }}
+            onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
+            onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
+          >
+            {t('prayer_times')} ›
+          </button>
         </div>
 
         {/* ── COUNSEL CARD ─────────────────────────────────────────────────── */}
         <div style={{ ...card(), padding: '24px 28px', borderLeft: isAr ? 'none' : `4px solid #C8A84B`, borderRight: isAr ? `4px solid #C8A84B` : 'none' }}>
           <p style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 1.4, color: C.gold, fontWeight: 600, margin: '0 0 12px' }}>
-            {d('Conseil islamique', 'Islamic counsel', 'نصيحة إسلامية')}
+            {t('meteo.counsel_label')}
           </p>
           {isAr && (
-            <p style={{ fontFamily: "'Scheherazade New', serif", fontSize: 20, color: C.textDark, direction: 'rtl', margin: '0 0 10px', lineHeight: 1.7 }}>
+            <p style={{ fontFamily: "'Cairo', sans-serif", fontSize: 20, color: C.textDark, direction: 'rtl', margin: '0 0 10px', lineHeight: 1.7 }}>
               هُوَ الَّذِي يُرِيكُمُ الْبَرْقَ خَوْفًا وَطَمَعًا
             </p>
           )}
-          <p style={{ fontSize: isAr ? 14 : 13, color: C.textLight, margin: '0 0 12px', fontStyle: 'italic', fontFamily: isAr ? "'Scheherazade New', serif" : 'Inter, sans-serif' }}>
-            {d('« C\'est Lui qui vous montre l\'éclair, source de crainte et d\'espoir. » — Coran 13:12',
-               '"It is He who shows you lightning, a source of fear and hope." — Quran 13:12',
-               '« هو الذي يريكم البرق خوفاً وطمعاً » — القرآن 13:12')}
+          <p style={{ fontSize: isAr ? 14 : 13, color: C.textLight, margin: '0 0 12px', fontStyle: 'italic', fontFamily: "'Cairo', sans-serif" }}>
+            {t('meteo.counsel_verse')}
           </p>
-          <p style={{ fontSize: 14, color: C.textMid, margin: 0, lineHeight: 1.7, fontFamily: isAr ? "'Scheherazade New', serif" : 'Inter, sans-serif' }}>
-            {d(
-              'La météo nous rappelle la grandeur d\'Allah. Préparez-vous pour chaque prière, quelles que soient les conditions climatiques.',
-              'The weather reminds us of the greatness of Allah. Prepare for every prayer, whatever the weather conditions.',
-              'الطقس يذكرنا بعظمة الله. استعد لكل صلاة مهما كانت الأحوال الجوية.'
-            )}
+          <p style={{ fontSize: 14, color: C.textMid, margin: 0, lineHeight: 1.7, fontFamily: "'Cairo', sans-serif" }}>
+            {t('meteo.counsel_text')}
           </p>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '../context/ThemeContext';
 import { lightTheme, darkTheme } from '../theme/colors';
 import { FaTrash, FaHeart, FaRegHeart } from 'react-icons/fa';
@@ -11,14 +12,19 @@ interface Gratitude {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const CATEGORIES = ['Allah', 'Foi', 'Famille', 'Santé', 'Travail', 'Autre'];
+// Category IDs stored in localStorage — language-neutral keys
+const CATEGORY_IDS = ['cat_allah', 'cat_foi', 'cat_famille', 'cat_sante', 'cat_travail', 'cat_autre'] as const;
+type CatId = typeof CATEGORY_IDS[number];
 
+// Arabic script is always the same regardless of UI language
 const CATEGORY_ARABIC: Record<string, string> = {
-  Allah: 'الله', Foi: 'الإيمان', Famille: 'الأسرة', Santé: 'الصحة', Travail: 'العمل', Autre: 'أخرى',
+  cat_allah: 'الله', cat_foi: 'الإيمان', cat_famille: 'الأسرة',
+  cat_sante: 'الصحة', cat_travail: 'العمل', cat_autre: 'أخرى',
 };
 
 const gold = '#C8A84B';
 const goldLight = '#E0C870';
+const FILTER_ALL = '__all__';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -54,6 +60,7 @@ const IslamicPattern = ({ opacity = 0.06 }: { opacity?: number }) => (
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function Alhamdulillah() {
+  const { t } = useTranslation();
   const { theme } = useTheme();
   const C = theme === 'light' ? lightTheme : darkTheme;
   const isDark = theme === 'dark';
@@ -63,8 +70,8 @@ export default function Alhamdulillah() {
     catch { return []; }
   });
   const [newText, setNewText] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState(CATEGORIES[0]);
-  const [filterCategory, setFilterCategory] = useState('Tous');
+  const [selectedCategory, setSelectedCategory] = useState<CatId>(CATEGORY_IDS[0]);
+  const [filterCategory, setFilterCategory] = useState(FILTER_ALL);
 
   useEffect(() => {
     localStorage.setItem('gratitudes', JSON.stringify(gratitudes));
@@ -75,7 +82,7 @@ export default function Alhamdulillah() {
     setGratitudes(prev => [{
       id: Date.now().toString(), text: newText.trim(),
       category: selectedCategory,
-      date: new Date().toLocaleDateString('fr-FR'), liked: false,
+      date: new Date().toLocaleDateString(undefined), liked: false,
     }, ...prev]);
     setNewText('');
   };
@@ -85,7 +92,7 @@ export default function Alhamdulillah() {
 
   const streak = computeStreak(gratitudes);
   const usedCategories = [...new Set(gratitudes.map(g => g.category))];
-  const filtered = filterCategory === 'Tous' ? gratitudes : gratitudes.filter(g => g.category === filterCategory);
+  const filtered = filterCategory === FILTER_ALL ? gratitudes : gratitudes.filter(g => g.category === filterCategory);
 
   const glass = (extra?: object): React.CSSProperties => ({
     background: isDark ? 'rgba(14,22,16,0.88)' : 'rgba(255,255,255,0.95)',
@@ -103,48 +110,39 @@ export default function Alhamdulillah() {
 
       {/* ── HERO ─────────────────────────────────────────────────────────── */}
       <div style={{
-        position: 'relative', borderRadius: 26, overflow: 'hidden', marginBottom: 24,
-        backgroundImage: `linear-gradient(145deg, rgba(6,15,10,0.96) 0%, rgba(20,52,34,0.9) 55%, rgba(8,20,14,0.80) 100%), url('/photomosquee.png')`,
-        backgroundSize: 'cover', backgroundPosition: 'center',
-        minHeight: 220, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
-        padding: '44px 38px 36px',
+        position: 'relative', borderRadius: 20, overflow: 'hidden', marginBottom: 20,
+        backgroundImage: `linear-gradient(145deg, rgba(6,15,10,0.80) 0%, rgba(20,52,34,0.68) 55%, rgba(8,20,14,0.60) 100%), url('/photomosquee.png')`,
+        backgroundSize: 'cover', backgroundPosition: 'center 30%',
+        display: 'flex', flexDirection: 'column', justifyContent: 'flex-start',
+        padding: '28px 34px 24px',
+        border: '1px solid rgba(200,168,75,0.14)',
+        boxShadow: '0 6px 28px rgba(0,0,0,0.22)',
       }}>
-        <IslamicPattern opacity={0.08} />
-        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, transparent, ${gold}, ${goldLight}, ${gold}, transparent)` }} />
-
-        {/* Watermark verse */}
-        <p style={{
-          position: 'absolute', top: 20, right: 32, margin: 0, pointerEvents: 'none',
-          fontFamily: "'Scheherazade New', serif", fontSize: 20,
-          color: 'rgba(200,168,75,0.16)', direction: 'rtl',
-        }}>
-          لَئِن شَكَرْتُمْ لَأَزِيدَنَّكُمْ
-        </p>
+        <IslamicPattern opacity={0.07} />
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, transparent, ${gold}, ${goldLight}, ${gold}, transparent)` }} />
 
         <div style={{ position: 'relative' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-            <svg width="10" height="10" viewBox="0 0 20 20">
+            <div style={{ height: 1, width: 18, background: 'rgba(200,168,75,0.5)' }} />
+            <svg width="7" height="7" viewBox="0 0 20 20">
               <polygon points="10,1 12,8 19,8 13,12 15,19 10,15 5,19 7,12 1,8 8,8" fill={gold} />
             </svg>
-            <span style={{ fontSize: 10, color: 'rgba(224,200,112,0.8)', letterSpacing: '0.2em', textTransform: 'uppercase', fontWeight: 600 }}>
-              Journal de Gratitude
-            </span>
+            <div style={{ height: 1, width: 18, background: 'rgba(200,168,75,0.5)' }} />
           </div>
-
-          <p style={{
-            margin: '0 0 6px', fontFamily: "'Scheherazade New', serif",
-            fontSize: 'clamp(28px,5vw,40px)', color: goldLight, direction: 'rtl',
-            lineHeight: 1.5, textShadow: '0 0 30px rgba(200,168,75,0.2)',
-          }}>
-            الْحَمْدُ لِلَّهِ
-          </p>
-
-          <h1 style={{ margin: '0 0 8px', fontSize: 'clamp(22px,3vw,30px)', fontWeight: 700, color: '#fff', fontFamily: "'Playfair Display', serif" }}>
-            Alhamdulillah
-          </h1>
-          <p style={{ margin: 0, fontSize: 13, color: 'rgba(255,255,255,0.5)' }}>
-            « Chaque bienfait mérite d'être reconnu. »
-          </p>
+          <div style={{ borderLeft: `3px solid rgba(200,168,75,0.75)`, paddingLeft: 16 }}>
+            <span style={{ fontSize: 10, color: 'rgba(224,200,112,0.8)', letterSpacing: '0.2em', textTransform: 'uppercase', fontWeight: 600, display: 'block', marginBottom: 6 }}>
+              {t('alhamd_extra.journal_label')}
+            </span>
+            <p style={{ margin: '0 0 4px', fontFamily: "'Cairo', sans-serif", fontSize: 'clamp(22px,4vw,32px)', color: goldLight, direction: 'rtl', lineHeight: 1.4 }}>
+              الْحَمْدُ لِلَّهِ
+            </p>
+            <h1 style={{ margin: '0 0 6px', fontSize: 'clamp(18px,3vw,26px)', fontWeight: 700, color: '#fff', fontFamily: "'Cairo', sans-serif", letterSpacing: '-0.01em' }}>
+              Alhamdulillah
+            </h1>
+            <p style={{ margin: 0, fontSize: 12.5, color: 'rgba(255,255,255,0.5)' }}>
+              {t('alhamd_extra.quote')}
+            </p>
+          </div>
         </div>
       </div>
 
@@ -158,13 +156,13 @@ export default function Alhamdulillah() {
         <div style={{ position: 'relative' }}>
           <p style={{
             margin: '0 0 8px', textAlign: 'right', direction: 'rtl',
-            fontFamily: "'Scheherazade New', serif", fontSize: 22,
+            fontFamily: "'Cairo', sans-serif", fontSize: 22,
             color: isDark ? goldLight : '#1B3022', lineHeight: 1.7,
           }}>
             وَإِذْ تَأَذَّنَ رَبُّكُمْ لَئِن شَكَرْتُمْ لَأَزِيدَنَّكُمْ وَلَئِن كَفَرْتُمْ إِنَّ عَذَابِي لَشَدِيدٌ
           </p>
           <p style={{ margin: '0 0 4px', fontSize: 13, fontStyle: 'italic', color: C.textMid, lineHeight: 1.65 }}>
-            « Si vous êtes reconnaissants, Je vous accorderai certes davantage. Mais si vous êtes ingrats, Mon châtiment est certes sévère. »
+            {t('alhamd_extra.verse_translation')}
           </p>
           <p style={{ margin: 0, fontSize: 11, color: gold, fontWeight: 700 }}>Coran 14:7</p>
         </div>
@@ -173,14 +171,14 @@ export default function Alhamdulillah() {
       {/* ── STATS ROW ─────────────────────────────────────────────────────── */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 20 }}>
         {[
-          { value: gratitudes.length, label: 'Entrées totales', color: C.green },
-          { value: streak,            label: 'Jours consécutifs', color: gold },
-          { value: usedCategories.length, label: 'Catégories', color: isDark ? goldLight : C.green },
+          { value: gratitudes.length, label: t('alhamd_extra.total_entries'), color: C.green },
+          { value: streak,            label: t('alhamd_extra.consecutive_days'), color: gold },
+          { value: usedCategories.length, label: t('alhamd_extra.categories'), color: isDark ? goldLight : C.green },
         ].map(stat => (
           <div key={stat.label} style={{ ...glass({ padding: '20px 16px', textAlign: 'center' }), position: 'relative', overflow: 'hidden' }}>
             <IslamicPattern opacity={isDark ? 0.03 : 0.025} />
             <div style={{ position: 'relative' }}>
-              <p style={{ margin: '0 0 6px', fontSize: 34, fontWeight: 800, color: stat.color, fontFamily: "'Playfair Display', serif", lineHeight: 1 }}>
+              <p style={{ margin: '0 0 6px', fontSize: 34, fontWeight: 800, color: stat.color, fontFamily: "'Cairo', sans-serif", lineHeight: 1 }}>
                 {stat.value}
               </p>
               <p style={{ margin: 0, fontSize: 10.5, color: C.textMid, textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600 }}>
@@ -200,21 +198,21 @@ export default function Alhamdulillah() {
               <polygon points="10,1 12,8 19,8 13,12 15,19 10,15 5,19 7,12 1,8 8,8" fill={gold} />
             </svg>
             <p style={{ margin: 0, fontSize: 11, fontWeight: 800, color: gold, textTransform: 'uppercase', letterSpacing: '0.14em' }}>
-              Nouvelle entrée
+              {t('alhamd_extra.new_entry')}
             </p>
           </div>
 
           <textarea
             value={newText}
             onChange={e => setNewText(e.target.value.slice(0, 300))}
-            placeholder="Aujourd'hui, je suis reconnaissant(e) pour..."
+            placeholder={t('alhamd_extra.text_placeholder')}
             rows={4}
             style={{
               width: '100%', padding: '14px 18px', borderRadius: 16,
               border: `1px solid ${isDark ? 'rgba(200,168,75,0.15)' : 'rgba(200,168,75,0.2)'}`,
               background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
               color: C.textDark, fontSize: 14.5, resize: 'vertical', outline: 'none',
-              lineHeight: 1.7, boxSizing: 'border-box', fontFamily: "'Inter', sans-serif",
+              lineHeight: 1.7, boxSizing: 'border-box', fontFamily: "'Cairo', sans-serif",
               transition: 'border-color 0.2s',
             }}
             onFocus={e => { e.target.style.borderColor = 'rgba(200,168,75,0.45)'; }}
@@ -229,21 +227,21 @@ export default function Alhamdulillah() {
 
           {/* Category selector */}
           <p style={{ margin: '0 0 10px', fontSize: 11, color: C.textMid, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-            Catégorie
+            {t('alhamd_extra.category_label')}
           </p>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginBottom: 22 }}>
-            {CATEGORIES.map(cat => (
-              <button key={cat} onClick={() => setSelectedCategory(cat)} style={{
-                background: selectedCategory === cat ? `linear-gradient(135deg,${gold},#A8882A)` : 'transparent',
-                color: selectedCategory === cat ? '#0D1810' : C.textMid,
-                border: `1px solid ${selectedCategory === cat ? gold : C.border}`,
-                borderRadius: 30, padding: '6px 16px', fontSize: 12.5, fontWeight: selectedCategory === cat ? 700 : 400,
+            {CATEGORY_IDS.map(catId => (
+              <button key={catId} onClick={() => setSelectedCategory(catId)} style={{
+                background: selectedCategory === catId ? `linear-gradient(135deg,${gold},#A8882A)` : 'transparent',
+                color: selectedCategory === catId ? '#0D1810' : C.textMid,
+                border: `1px solid ${selectedCategory === catId ? gold : C.border}`,
+                borderRadius: 30, padding: '6px 16px', fontSize: 12.5, fontWeight: selectedCategory === catId ? 700 : 400,
                 cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: 5,
               }}>
-                <span style={{ fontFamily: "'Scheherazade New', serif", fontSize: 14, color: 'inherit' }}>
-                  {CATEGORY_ARABIC[cat]}
+                <span style={{ fontFamily: "'Cairo', sans-serif", fontSize: 14, color: 'inherit' }}>
+                  {CATEGORY_ARABIC[catId]}
                 </span>
-                {cat}
+                {t(`alhamd_extra.${catId}`)}
               </button>
             ))}
           </div>
@@ -262,7 +260,7 @@ export default function Alhamdulillah() {
             onMouseEnter={e => { if (newText.trim()) e.currentTarget.style.transform = 'translateY(-1px)'; }}
             onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; }}
           >
-            Enregistrer ma gratitude
+            {t('alhamd_extra.save_gratitude')}
           </button>
         </div>
       </div>
@@ -274,24 +272,33 @@ export default function Alhamdulillah() {
             <svg width="11" height="11" viewBox="0 0 20 20">
               <polygon points="10,1 12,8 19,8 13,12 15,19 10,15 5,19 7,12 1,8 8,8" fill={gold} />
             </svg>
-            <h2 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: C.textDark, fontFamily: "'Playfair Display', serif" }}>
-              Mes entrées
+            <h2 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: C.textDark, fontFamily: "'Cairo', sans-serif" }}>
+              {t('alhamd_extra.my_entries')}
             </h2>
           </div>
-          <span style={{ fontSize: 11.5, color: C.textLight }}>{filtered.length} note{filtered.length !== 1 ? 's' : ''}</span>
+          <span style={{ fontSize: 11.5, color: C.textLight }}>{filtered.length}</span>
         </div>
 
         {/* Filter pills */}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 18 }}>
-          {['Tous', ...CATEGORIES].map(cat => (
-            <button key={cat} onClick={() => setFilterCategory(cat)} style={{
-              background: filterCategory === cat ? `rgba(200,168,75,0.14)` : 'transparent',
-              color: filterCategory === cat ? gold : C.textMid,
-              border: `1px solid ${filterCategory === cat ? 'rgba(200,168,75,0.4)' : C.border}`,
+          <button key={FILTER_ALL} onClick={() => setFilterCategory(FILTER_ALL)} style={{
+            background: filterCategory === FILTER_ALL ? `rgba(200,168,75,0.14)` : 'transparent',
+            color: filterCategory === FILTER_ALL ? gold : C.textMid,
+            border: `1px solid ${filterCategory === FILTER_ALL ? 'rgba(200,168,75,0.4)' : C.border}`,
+            borderRadius: 20, padding: '5px 14px', fontSize: 11.5,
+            fontWeight: filterCategory === FILTER_ALL ? 700 : 400, cursor: 'pointer', transition: 'all 0.15s',
+          }}>
+            {t('alhamd_extra.filter_all')}
+          </button>
+          {CATEGORY_IDS.map(catId => (
+            <button key={catId} onClick={() => setFilterCategory(catId)} style={{
+              background: filterCategory === catId ? `rgba(200,168,75,0.14)` : 'transparent',
+              color: filterCategory === catId ? gold : C.textMid,
+              border: `1px solid ${filterCategory === catId ? 'rgba(200,168,75,0.4)' : C.border}`,
               borderRadius: 20, padding: '5px 14px', fontSize: 11.5,
-              fontWeight: filterCategory === cat ? 700 : 400, cursor: 'pointer', transition: 'all 0.15s',
+              fontWeight: filterCategory === catId ? 700 : 400, cursor: 'pointer', transition: 'all 0.15s',
             }}>
-              {cat}
+              {t(`alhamd_extra.${catId}`)}
             </button>
           ))}
         </div>
@@ -301,13 +308,13 @@ export default function Alhamdulillah() {
           <div style={{ ...glass({ padding: '56px 24px', textAlign: 'center' }), position: 'relative', overflow: 'hidden' }}>
             <IslamicPattern opacity={isDark ? 0.04 : 0.03} />
             <div style={{ position: 'relative' }}>
-              <p style={{ fontFamily: "'Scheherazade New', serif", fontSize: 32, color: isDark ? 'rgba(200,168,75,0.4)' : 'rgba(200,168,75,0.5)', margin: '0 0 10px', direction: 'rtl' }}>
+              <p style={{ fontFamily: "'Cairo', sans-serif", fontSize: 32, color: isDark ? 'rgba(200,168,75,0.4)' : 'rgba(200,168,75,0.5)', margin: '0 0 10px', direction: 'rtl' }}>
                 الْحَمْدُ لِلَّهِ
               </p>
               <p style={{ color: C.textMid, margin: 0, fontSize: 13 }}>
-                {filterCategory === 'Tous'
-                  ? 'Aucune entrée pour le moment. Commencez par exprimer votre gratitude.'
-                  : `Aucune entrée dans la catégorie « ${filterCategory} ».`}
+                {filterCategory === FILTER_ALL
+                  ? t('alhamd_extra.empty_all')
+                  : t('alhamd_extra.empty_category')}
               </p>
             </div>
           </div>
@@ -336,7 +343,7 @@ export default function Alhamdulillah() {
                     }}
                     onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.2)'; }}
                     onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; }}
-                    title="J'aime">
+                    title={t('common.like') || '♥'}>
                       {g.liked ? <FaHeart size={14} /> : <FaRegHeart size={14} />}
                     </button>
                     <button onClick={() => deleteGratitude(g.id)} style={{
@@ -345,7 +352,7 @@ export default function Alhamdulillah() {
                     }}
                     onMouseEnter={e => { e.currentTarget.style.color = '#e74c3c'; }}
                     onMouseLeave={e => { e.currentTarget.style.color = C.textLight; }}
-                    title="Supprimer">
+                    title={t('common.delete') || '🗑'}>
                       <FaTrash size={12} />
                     </button>
                   </div>
@@ -358,10 +365,10 @@ export default function Alhamdulillah() {
                     borderRadius: 20, padding: '2px 12px', fontSize: 10.5,
                     color: gold, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4,
                   }}>
-                    <span style={{ fontFamily: "'Scheherazade New', serif", fontSize: 13 }}>
-                      {CATEGORY_ARABIC[g.category] || g.category}
+                    <span style={{ fontFamily: "'Cairo', sans-serif", fontSize: 13 }}>
+                      {CATEGORY_ARABIC[g.category] || ''}
                     </span>
-                    {g.category}
+                    {t(`alhamd_extra.${g.category}`) || g.category}
                   </span>
                   <span style={{ fontSize: 10.5, color: C.textLight }}>{g.date}</span>
                 </div>

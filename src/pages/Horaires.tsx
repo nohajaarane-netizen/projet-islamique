@@ -1,8 +1,11 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 import { useTheme } from '../context/ThemeContext';
 import { lightTheme, darkTheme } from '../theme/colors';
+import { FaMapMarkerAlt, FaExclamationTriangle, FaCalendarAlt, FaSyncAlt } from 'react-icons/fa';
+import { BsSunrise, BsSun, BsCloudSun, BsSunset, BsMoonStars } from 'react-icons/bs';
+import { GiSamaraMosque } from 'react-icons/gi';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -10,15 +13,19 @@ interface PrayerTimings {
   Fajr: string; Dhuhr: string; Asr: string; Maghrib: string; Isha: string;
   [key: string]: string;
 }
-
 interface DaySchedule {
   date: string;
   gregorian: { date: string; weekday: { en: string } };
   hijri: { date: string };
   timings: PrayerTimings;
 }
+interface GeoState {
+  lat: number; lng: number;
+  city: string; country: string;
+  status: 'idle' | 'loading' | 'ok' | 'denied' | 'error';
+}
 
-// ─── Constants & Helpers ─────────────────────────────────────────────────────
+// ─── Constants ────────────────────────────────────────────────────────────────
 
 const PRAYERS = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'] as const;
 type PrayerKey = typeof PRAYERS[number];
@@ -26,44 +33,66 @@ type PrayerKey = typeof PRAYERS[number];
 const PRAYER_ARABIC: Record<PrayerKey, string> = {
   Fajr: 'الفجر', Dhuhr: 'الظهر', Asr: 'العصر', Maghrib: 'المغرب', Isha: 'العشاء',
 };
-
-const gold = '#C8A84B';
-const goldLight = '#E0C870';
-
-function getCurrentPrayer(timings: PrayerTimings): PrayerKey {
-  const now = new Date();
-  const mins = now.getHours() * 60 + now.getMinutes();
-  const times = PRAYERS.map(p => { const [h, m] = (timings[p] || '00:00').split(':').map(Number); return h * 60 + m; });
-  let current: PrayerKey = 'Isha';
-  for (let i = 0; i < PRAYERS.length; i++) { if (mins >= times[i]) current = PRAYERS[i]; }
-  return current;
-}
-
-function parseHijriDate(raw: string) {
-  const parts = raw.split('-');
-  return { day: parts[2] || '', month: parts[1] || '', year: parts[0] || '' };
-}
-
+const PRAYER_ICON: Record<PrayerKey, React.ReactElement> = {
+  Fajr:    <BsSunrise />,
+  Dhuhr:   <BsSun />,
+  Asr:     <BsCloudSun />,
+  Maghrib: <BsSunset />,
+  Isha:    <BsMoonStars />,
+};
+const WEEKDAY_I18N_KEY: Record<string, string> = {
+  Monday: 'days.monday', Tuesday: 'days.tuesday', Wednesday: 'days.wednesday',
+  Thursday: 'days.thursday', Friday: 'days.friday', Saturday: 'days.saturday',
+  Sunday: 'days.sunday',
+};
+const HIJRI_MONTHS_AR: Record<string, string> = {
+  '01':'مُحَرَّم','02':'صَفَر','03':'رَبِيعُ الْأَوَّل','04':'رَبِيعُ الثَّانِي',
+  '05':'جُمَادَى الأُولَى','06':'جُمَادَى الآخِرَة','07':'رَجَب','08':'شَعْبَان',
+  '09':'رَمَضَان','10':'شَوَّال','11':'ذُو الْقَعْدَة','12':'ذُو الْحِجَّة',
+};
 const HIJRI_MONTHS: Record<string, string> = {
   '01':'Muharram','02':'Safar','03':"Rabi' al-Awwal",'04':"Rabi' al-Thani",
   '05':'Jumada al-Awwal','06':'Jumada al-Thani','07':'Rajab','08':"Sha'ban",
   '09':'Ramadan','10':'Shawwal','11':"Dhu al-Qi'dah",'12':'Dhu al-Hijjah',
 };
 
-const HIJRI_MONTHS_AR: Record<string, string> = {
-  '01':'مُحَرَّم','02':'صَفَر','03':'رَبِيعُ الْأَوَّل','04':'رَبِيعُ الثَّانِي',
-  '05':'جُمَادَى الأُولَى','06':'جُمَادَى الآخِرَة','07':'رَجَب','08':'شَعْبَان',
-  '09':'رَمَضَان','10':'شَوَّال','11':'ذُو الْقَعْدَة','12':'ذُو الْحِجَّة',
-};
+const gold = '#C8A84B';
+const goldLight = '#E0C870';
 
-const WEEKDAYS_FR: Record<string, string> = {
-  Monday:'Lundi', Tuesday:'Mardi', Wednesday:'Mercredi', Thursday:'Jeudi',
-  Friday:'Vendredi', Saturday:'Samedi', Sunday:'Dimanche',
-};
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
-// ─── Islamic Pattern ─────────────────────────────────────────────────────────
+function timeToMins(t: string) {
+  const [h, m] = (t || '00:00').split(':').map(Number);
+  return h * 60 + m;
+}
+function padZ(n: number) { return String(n).padStart(2, '0'); }
 
-const IslamicPattern = ({ opacity = 0.06 }: { opacity?: number }) => (
+function getNextPrayer(timings: PrayerTimings, nowMins: number): { key: PrayerKey; minsLeft: number } {
+  for (const p of PRAYERS) {
+    const t = timeToMins(timings[p]);
+    if (nowMins < t) return { key: p, minsLeft: t - nowMins };
+  }
+  // After Isha → next Fajr tomorrow
+  const fajrMins = timeToMins(timings.Fajr);
+  return { key: 'Fajr', minsLeft: 1440 - nowMins + fajrMins };
+}
+
+function getCurrentPrayer(timings: PrayerTimings, nowMins: number): PrayerKey {
+  let current: PrayerKey = 'Isha';
+  for (const p of PRAYERS) {
+    if (nowMins >= timeToMins(timings[p])) current = p;
+  }
+  return current;
+}
+
+function parseHijri(raw: string) {
+  const [y, m, d] = raw.split('-');
+  return { day: d || '', month: m || '', year: y || '' };
+}
+
+// ─── Sub-components ───────────────────────────────────────────────────────────
+
+const IslamicPattern = ({ opacity = 0.06, color: _c }: { opacity?: number; color?: string }) => (
   <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }} xmlns="http://www.w3.org/2000/svg">
     <defs>
       <pattern id="ip-hor" x="0" y="0" width="64" height="64" patternUnits="userSpaceOnUse">
@@ -79,7 +108,7 @@ const IslamicPattern = ({ opacity = 0.06 }: { opacity?: number }) => (
   </svg>
 );
 
-// ─── Component ────────────────────────────────────────────────────────────────
+// ─── Main Component ───────────────────────────────────────────────────────────
 
 const Horaires: React.FC = () => {
   const { t } = useTranslation();
@@ -87,36 +116,110 @@ const Horaires: React.FC = () => {
   const C = theme === 'light' ? lightTheme : darkTheme;
   const isDark = theme === 'dark';
 
+  const [geo, setGeo] = useState<GeoState>({ lat: 0, lng: 0, city: '', country: '', status: 'idle' });
   const [todayTimings, setTodayTimings] = useState<PrayerTimings | null>(null);
   const [hijriRaw, setHijriRaw] = useState('');
   const [gregorianRaw, setGregorianRaw] = useState('');
   const [weekday, setWeekday] = useState('');
   const [monthData, setMonthData] = useState<DaySchedule[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showFullMonth, setShowFullMonth] = useState(false);
+  const [viewYear, setViewYear]   = useState(() => new Date().getFullYear());
+  const [viewMonth, setViewMonth] = useState(() => new Date().getMonth() + 1);
+  const [viewMonthData, setViewMonthData] = useState<DaySchedule[]>([]);
+  const [loadingMonthView, setLoadingMonthView] = useState(false);
   const [now, setNow] = useState(new Date());
+  const [hoveredPrayer, setHoveredPrayer] = useState<PrayerKey | null>(null);
 
+  // Tick every second for countdown
   useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), 60_000);
+    const id = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(id);
   }, []);
 
+  const nowMins = now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
+
   const currentPrayer = useMemo(
-    () => (todayTimings ? getCurrentPrayer(todayTimings) : null),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [todayTimings, now]
+    () => (todayTimings ? getCurrentPrayer(todayTimings, nowMins) : null),
+    [todayTimings, nowMins]
+  );
+  const nextInfo = useMemo(
+    () => (todayTimings ? getNextPrayer(todayTimings, nowMins) : null),
+    [todayTimings, nowMins]
   );
 
+  const secsLeft = nextInfo ? Math.round(nextInfo.minsLeft * 60 - now.getSeconds()) : 0;
+
+  // ── Geolocation ─────────────────────────────────────────────────────────────
+
+  const requestLocation = useCallback(() => {
+    if (!navigator.geolocation) {
+      setGeo(g => ({ ...g, status: 'error', city: 'Berrechid', country: 'MA' }));
+      return;
+    }
+    setGeo(g => ({ ...g, status: 'loading' }));
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const { latitude: lat, longitude: lng } = pos.coords;
+        let city = 'Ma ville', country = '';
+        try {
+          const res = await axios.get(
+            `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`,
+            { headers: { 'Accept-Language': 'fr' } }
+          );
+          const addr = res.data.address || {};
+          city    = addr.city || addr.town || addr.village || addr.county || 'Ma ville';
+          country = addr.country_code?.toUpperCase() || '';
+        } catch { /* silently use default */ }
+        setGeo({ lat, lng, city, country, status: 'ok' });
+      },
+      () => {
+        // Permission denied — fallback to Berrechid
+        setGeo({ lat: 33.2616, lng: -7.5869, city: 'Berrechid', country: 'MA', status: 'denied' });
+      },
+      { timeout: 8000, enableHighAccuracy: true }
+    );
+  }, []);
+
+  // Auto-request on mount — deferred to avoid sync-setState lint rule
   useEffect(() => {
+    const id = setTimeout(requestLocation, 0);
+    return () => clearTimeout(id);
+  }, [requestLocation]);
+
+  // Fetch data for a different month
+  useEffect(() => {
+    const d = new Date();
+    if (viewYear === d.getFullYear() && viewMonth === d.getMonth() + 1) return;
+    if (geo.status !== 'ok' && geo.status !== 'denied') return;
     let ignore = false;
     (async () => {
       try {
-        setLoading(true);
+        setLoadingMonthView(true);
+        const params = `latitude=${geo.lat}&longitude=${geo.lng}&method=4`;
+        const res = await axios.get(`https://api.aladhan.com/v1/calendar/${viewYear}/${viewMonth}?${params}`);
+        if (!ignore) setViewMonthData(res.data.data || []);
+      } catch { /* silently ignore */ }
+      finally { if (!ignore) setLoadingMonthView(false); }
+    })();
+    return () => { ignore = true; };
+  }, [geo.lat, geo.lng, geo.status, viewYear, viewMonth]);
+
+  // ── Fetch prayer times once we have coords ─────────────────────────────────
+
+  useEffect(() => {
+    if (geo.status !== 'ok' && geo.status !== 'denied') return;
+    let ignore = false;
+    (async () => {
+      try {
+        setLoading(true); setError('');
         const today = new Date();
+        const base = `https://api.aladhan.com/v1`;
+        const params = `latitude=${geo.lat}&longitude=${geo.lng}&method=4`;
         const [todayRes, monthRes] = await Promise.all([
-          axios.get('https://api.aladhan.com/v1/timingsByCity?city=Berrechid&country=MA&method=4'),
-          axios.get(`https://api.aladhan.com/v1/calendarByCity/${today.getFullYear()}/${today.getMonth()+1}?city=Berrechid&country=MA&method=4`),
+          axios.get(`${base}/timings/${Math.floor(Date.now() / 1000)}?${params}`),
+          axios.get(`${base}/calendar/${today.getFullYear()}/${today.getMonth() + 1}?${params}`),
         ]);
         if (!ignore) {
           setTodayTimings(todayRes.data.data.timings);
@@ -126,35 +229,40 @@ const Horaires: React.FC = () => {
           setMonthData(monthRes.data.data || []);
         }
       } catch {
-        if (!ignore) setError(t('horaires.error') || 'Impossible de récupérer les horaires');
+        if (!ignore) setError(t('horaires.error'));
       } finally {
         if (!ignore) setLoading(false);
       }
     })();
     return () => { ignore = true; };
-  }, [t]);
+  }, [geo.lat, geo.lng, geo.status]);
 
-  // ── Shared styles ─────────────────────────────────────────────────────────
+  // ── Styles ───────────────────────────────────────────────────────────────────
 
   const glass = (extra?: React.CSSProperties): React.CSSProperties => ({
-    background: isDark ? 'rgba(14,22,16,0.88)' : 'rgba(255,255,255,0.95)',
-    backdropFilter: 'blur(16px)',
-    border: `1px solid ${isDark ? 'rgba(200,168,75,0.12)' : 'rgba(200,168,75,0.18)'}`,
+    background: isDark ? 'rgba(12,18,32,0.90)' : 'rgba(255,255,255,0.97)',
+    backdropFilter: 'blur(18px)',
+    border: `1px solid ${isDark ? 'rgba(200,168,75,0.13)' : 'rgba(200,168,75,0.18)'}`,
     borderRadius: 22,
     boxShadow: isDark
-      ? '0 8px 40px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.04)'
+      ? '0 8px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.04)'
       : '0 6px 28px rgba(27,48,34,0.07), inset 0 1px 0 rgba(255,255,255,0.9)',
     ...extra,
   });
 
-  // ── Loading ───────────────────────────────────────────────────────────────
+  // ── Loading screen ────────────────────────────────────────────────────────
 
-  if (loading) return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
-      <div style={{ textAlign: 'center' }}>
-        <div style={{ width: 48, height: 48, border: `2px solid rgba(200,168,75,0.2)`, borderTop: `2px solid ${gold}`, borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 16px' }} />
-        <p style={{ color: C.textMid, fontSize: 13 }}>{t('horaires.loading') || 'Chargement...'}</p>
+  if (geo.status === 'idle' || geo.status === 'loading' || (loading && !todayTimings)) return (
+    <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', minHeight: '60vh', gap: 18 }}>
+      <div style={{ position: 'relative', width: 56, height: 56 }}>
+        <div style={{ width: 56, height: 56, border: `2px solid rgba(200,168,75,0.15)`, borderTop: `2.5px solid ${gold}`, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+        <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, color: gold }}>
+          {geo.status === 'loading' ? <FaMapMarkerAlt /> : <GiSamaraMosque />}
+        </span>
       </div>
+      <p style={{ color: C.textMid, fontSize: 14, fontWeight: 500 }}>
+        {geo.status === 'loading' ? t('horaires_extra.locating') : t('horaires_extra.loading_schedule')}
+      </p>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
   );
@@ -162,188 +270,249 @@ const Horaires: React.FC = () => {
   if (error) return (
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
       <div style={{ ...glass({ padding: '36px 40px', textAlign: 'center', maxWidth: 380 }) }}>
-        <p style={{ fontSize: 13, color: '#c0392b', marginBottom: 16 }}>{error}</p>
-        <button onClick={() => window.location.reload()} style={{ padding: '9px 22px', background: `linear-gradient(135deg,${gold},#A8882A)`, border: 'none', borderRadius: 10, color: '#0D1810', cursor: 'pointer', fontSize: 13, fontWeight: 700 }}>
-          Réessayer
+        <p style={{ fontSize: 32, marginBottom: 12, color: '#c0392b' }}><FaExclamationTriangle /></p>
+        <p style={{ fontSize: 14, color: '#c0392b', marginBottom: 20 }}>{error}</p>
+        <button onClick={() => { requestLocation(); }}
+          style={{ padding: '10px 24px', background: `linear-gradient(135deg,${gold},#A8882A)`, border: 'none', borderRadius: 12, color: '#0D1810', cursor: 'pointer', fontSize: 13, fontWeight: 700 }}>
+          {t('horaires_extra.retry')}
         </button>
       </div>
     </div>
   );
 
-  const hijri = parseHijriDate(hijriRaw);
-  const hijriMonthName = HIJRI_MONTHS[hijri.month] || '';
-  const hijriMonthNameAr = HIJRI_MONTHS_AR[hijri.month] || '';
-  const todayDateNum = now.getDate();
-  const visibleDays = showFullMonth ? monthData : monthData.slice(0, 7);
+  if (!todayTimings) return null;
+
+  const hijri    = parseHijri(hijriRaw);
+  const hijriAr  = `${hijri.day} ${HIJRI_MONTHS_AR[hijri.month] || ''}`;
+  const hijriLat = `${hijri.day} ${HIJRI_MONTHS[hijri.month] || ''} ${hijri.year} H`;
+  const todayNum = now.getDate();
+  const todayYear = now.getFullYear();
+  const todayMonthNum = now.getMonth() + 1;
+  const isCurrentMonthView = viewYear === todayYear && viewMonth === todayMonthNum;
+
+  // Navigation handlers
+  const goPrevMonth = () => {
+    setShowFullMonth(false);
+    if (viewMonth === 1) { setViewYear(y => y - 1); setViewMonth(12); }
+    else setViewMonth(m => m - 1);
+  };
+  const goNextMonth = () => {
+    setShowFullMonth(false);
+    if (viewMonth === 12) { setViewYear(y => y + 1); setViewMonth(1); }
+    else setViewMonth(m => m + 1);
+  };
+  const goToday = () => {
+    setViewYear(now.getFullYear());
+    setViewMonth(now.getMonth() + 1);
+    setShowFullMonth(false);
+  };
+
+  const viewMonthLabel = new Date(viewYear, viewMonth - 1, 1)
+    .toLocaleString('fr-FR', { month: 'long', year: 'numeric' });
+
+  const displayData = isCurrentMonthView ? monthData : viewMonthData;
+  const daysFromToday = isCurrentMonthView
+    ? displayData.filter(day => parseInt(day.gregorian?.date?.split('-')[0] || '0', 10) >= todayNum)
+    : displayData;
+
+  const visibleDays = showFullMonth ? daysFromToday : daysFromToday.slice(0, 10);
+  const locLabel = geo.city ? `${geo.city}${geo.country ? ', ' + geo.country : ''}` : 'Ma position';
+
+  const cdownH = Math.floor(secsLeft / 3600);
+  const cdownM = Math.floor((secsLeft % 3600) / 60);
+  const cdownS = secsLeft % 60;
 
   const prayerMeta: Record<PrayerKey, { label: string; sub: string }> = {
-    Fajr:    { label: t('horaires.fajr')    || 'Fajr',    sub: t('horaires.fajr_sub')    || 'Aube'        },
-    Dhuhr:   { label: t('horaires.dhuhr')   || 'Dhuhr',   sub: t('horaires.dhuhr_sub')   || 'Zénith'      },
-    Asr:     { label: t('horaires.asr')     || 'Asr',     sub: t('horaires.asr_sub')     || 'Après-midi'  },
-    Maghrib: { label: t('horaires.maghrib') || 'Maghrib', sub: t('horaires.maghrib_sub') || 'Coucher'     },
-    Isha:    { label: t('horaires.isha')    || 'Isha',    sub: t('horaires.isha_sub')    || 'Nuit'        },
+    Fajr:    { label: t('salat.fajr'),    sub: t('salat_extra.fajr_sub')    },
+    Dhuhr:   { label: t('salat.dhuhr'),   sub: t('salat_extra.dhuhr_sub')   },
+    Asr:     { label: t('salat.asr'),     sub: t('salat_extra.asr_sub')     },
+    Maghrib: { label: t('salat.maghrib'), sub: t('salat_extra.maghrib_sub') },
+    Isha:    { label: t('salat.isha'),    sub: t('salat_extra.isha_sub')    },
   };
 
   return (
-    <div style={{ maxWidth: 800, margin: '0 auto', paddingBottom: 48 }}>
+    <div style={{ maxWidth: 820, margin: '0 auto', paddingBottom: 52 }}>
 
-      {/* ── HERO ─────────────────────────────────────────────────────────── */}
+      {/* ── HERO ─────────────────────────────────────────────────────────────── */}
       <div style={{
-        borderRadius: 26, overflow: 'hidden', marginBottom: 20, position: 'relative',
-        backgroundImage: `linear-gradient(145deg, rgba(6,15,10,0.95) 0%, rgba(18,48,30,0.88) 55%, rgba(8,20,14,0.78) 100%), url('/photomosquee.png')`,
-        backgroundSize: 'cover', backgroundPosition: 'center 25%', minHeight: 220,
-        display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: '40px 36px 32px',
+        borderRadius: 20, overflow: 'hidden', marginBottom: 20, position: 'relative',
+        backgroundImage: `linear-gradient(145deg, rgba(6,15,10,0.80) 0%, rgba(18,48,30,0.68) 55%, rgba(8,20,14,0.60) 100%), url('/photomosquee.png')`,
+        backgroundSize: 'cover', backgroundPosition: 'center 30%',
+        display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', padding: '28px 32px 24px',
+        border: '1px solid rgba(200,168,75,0.14)',
+        boxShadow: '0 6px 28px rgba(0,0,0,0.22)',
       }}>
-        <IslamicPattern opacity={0.08} />
-        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, transparent, ${gold}, ${goldLight}, ${gold}, transparent)` }} />
+        <IslamicPattern opacity={0.07} />
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, transparent, ${gold}, ${goldLight}, ${gold}, transparent)` }} />
 
-        {/* Arabic Quranic verse */}
-        <p style={{
-          position: 'absolute', top: 20, right: 32, margin: 0, pointerEvents: 'none',
-          fontFamily: "'Scheherazade New', serif", fontSize: 20,
-          color: 'rgba(200,168,75,0.18)', direction: 'rtl',
-        }}>
-          إِنَّ الصَّلَاةَ كَانَتْ عَلَى الْمُؤْمِنِينَ كِتَابًا مَوْقُوتًا
-        </p>
+        {/* Location badge */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 18 }}>
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 6,
+            background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)',
+            borderRadius: 20, padding: '4px 12px', backdropFilter: 'blur(8px)',
+          }}>
+            <FaMapMarkerAlt style={{ fontSize: 12, color: goldLight }} />
+            <span style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.85)', fontWeight: 600 }}>{locLabel}</span>
+            {geo.status === 'denied' && (
+              <button onClick={requestLocation} title={t('horaires_extra.retry')}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: goldLight, fontSize: 11, padding: 0, marginLeft: 4 }}>
+                ↺
+              </button>
+            )}
+          </div>
+        </div>
 
         <div style={{ position: 'relative' }}>
-          <p style={{ margin: '0 0 8px', fontSize: 10.5, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgba(224,200,112,0.8)', fontWeight: 600 }}>
-            {WEEKDAYS_FR[weekday] || weekday} · Berrechid, Maroc
-          </p>
-          <h1 style={{
-            margin: '0 0 6px', fontSize: 'clamp(26px,4vw,36px)', fontWeight: 700, color: '#FFF',
-            fontFamily: "'Playfair Display', serif", letterSpacing: '-0.02em',
-          }}>
-            {t('horaires.title') || 'Horaires de Prière'}
-          </h1>
-          <p style={{ margin: 0, fontSize: 13, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6 }}>
-            {t('horaires.subtitle') || 'Planifiez votre journée autour des heures de prière'}
-          </p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+            <div style={{ height: 1, width: 18, background: 'rgba(200,168,75,0.5)' }} />
+            <svg width="7" height="7" viewBox="0 0 20 20"><polygon points="10,1 12,8 19,8 13,12 15,19 10,15 5,19 7,12 1,8 8,8" fill="#C8A84B" /></svg>
+            <div style={{ height: 1, width: 18, background: 'rgba(200,168,75,0.5)' }} />
+          </div>
+          <div style={{ borderLeft: `3px solid rgba(200,168,75,0.75)`, paddingLeft: 14 }}>
+            <p style={{ margin: '0 0 3px', fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgba(224,200,112,0.8)', fontWeight: 600 }}>
+              {t(WEEKDAY_I18N_KEY[weekday] || 'days.monday') || weekday}
+            </p>
+            <h1 style={{ margin: '0 0 4px', fontSize: 'clamp(22px,4vw,32px)', fontWeight: 800, color: '#FFF', letterSpacing: '-0.02em' }}>
+              {t('horaires.title')}
+            </h1>
+
+            {/* Countdown to next prayer */}
+            {nextInfo && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 8 }}>
+                <span style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.5)' }}>{t('next_prayer')} ·</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: goldLight }}>{PRAYER_ARABIC[nextInfo.key]} {prayerMeta[nextInfo.key].label}</span>
+                <span style={{ fontSize: 12.5, fontWeight: 700, color: gold, fontVariantNumeric: 'tabular-nums', background: 'rgba(200,168,75,0.12)', border: '1px solid rgba(200,168,75,0.25)', borderRadius: 8, padding: '3px 10px' }}>
+                  {padZ(cdownH)}:{padZ(cdownM)}:{padZ(cdownS)}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* ── DATE CARDS ───────────────────────────────────────────────────── */}
+      {/* ── DATE CARDS ───────────────────────────────────────────────────────── */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 20 }}>
 
         {/* Gregorian */}
-        <div style={{ ...glass({ padding: '20px 22px' }), position: 'relative', overflow: 'hidden' }}>
+        <div className="card" style={{ ...glass({ padding: '20px 22px' }), position: 'relative', overflow: 'hidden', cursor: 'default', transition: 'all 0.28s ease' }}>
           <IslamicPattern opacity={isDark ? 0.04 : 0.03} />
           <div style={{ position: 'relative' }}>
-            <p style={{ margin: '0 0 4px', fontSize: 9.5, letterSpacing: '0.14em', textTransform: 'uppercase', color: C.textLight, fontWeight: 700 }}>
-              Date grégorienne
-            </p>
-            <p style={{ margin: '0 0 2px', fontSize: 22, fontWeight: 800, color: C.textDark, fontFamily: "'Playfair Display', serif", lineHeight: 1 }}>
-              {gregorianRaw}
-            </p>
-            <p style={{ margin: 0, fontSize: 11.5, color: C.textMid }}>{WEEKDAYS_FR[weekday] || weekday}</p>
+            <p style={{ margin: '0 0 6px', fontSize: 9.5, letterSpacing: '0.14em', textTransform: 'uppercase', color: C.textLight, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 5 }}><FaCalendarAlt /> {t('horaires_extra.gregorian_date')}</p>
+            <p style={{ margin: '0 0 2px', fontSize: 20, fontWeight: 800, color: C.textDark, lineHeight: 1 }}>{gregorianRaw}</p>
+            <p style={{ margin: 0, fontSize: 11.5, color: C.textMid }}>{t(WEEKDAY_I18N_KEY[weekday] || 'days.monday') || weekday}</p>
           </div>
         </div>
 
         {/* Hijri */}
-        <div style={{ ...glass({ padding: '20px 22px' }), position: 'relative', overflow: 'hidden' }}>
+        <div className="card" style={{ ...glass({ padding: '20px 22px' }), position: 'relative', overflow: 'hidden', cursor: 'default', transition: 'all 0.28s ease' }}>
           <IslamicPattern opacity={isDark ? 0.04 : 0.03} />
           <div style={{ position: 'relative' }}>
-            <p style={{ margin: '0 0 4px', fontSize: 9.5, letterSpacing: '0.14em', textTransform: 'uppercase', color: C.textLight, fontWeight: 700 }}>
-              Date hijri
-            </p>
-            <p style={{
-              margin: '0 0 2px', textAlign: 'right', direction: 'rtl',
-              fontFamily: "'Scheherazade New', serif", fontSize: 22, color: isDark ? goldLight : '#1B3022', lineHeight: 1.3,
-            }}>
-              {hijri.day} {hijriMonthNameAr}
-            </p>
-            <p style={{ margin: 0, fontSize: 11, color: C.textMid }}>{hijri.day} {hijriMonthName} · {hijri.year} H</p>
+            <p style={{ margin: '0 0 6px', fontSize: 9.5, letterSpacing: '0.14em', textTransform: 'uppercase', color: C.textLight, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 5 }}><BsMoonStars /> {t('horaires_extra.hijri_date')}</p>
+            <p style={{ margin: '0 0 2px', textAlign: 'right', direction: 'rtl', fontSize: 20, color: isDark ? goldLight : '#1B3022', lineHeight: 1.3 }}>{hijriAr}</p>
+            <p style={{ margin: 0, fontSize: 11, color: C.textMid }}>{hijriLat}</p>
           </div>
         </div>
 
-        {/* Phase lunaire */}
-        <div style={{
+        {/* Localisation réelle */}
+        <div className="card" style={{
           padding: '20px 22px', borderRadius: 22,
           background: `linear-gradient(135deg, ${gold}, #A8882A)`,
-          position: 'relative', overflow: 'hidden',
-        }}>
+          position: 'relative', overflow: 'hidden', cursor: 'pointer', transition: 'all 0.28s ease',
+        }}
+          onClick={requestLocation}
+          title="Cliquer pour relancer la localisation"
+        >
           <IslamicPattern opacity={0.12} color="#fff" />
           <div style={{ position: 'relative' }}>
-            <p style={{ margin: '0 0 4px', fontSize: 9.5, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.65)', fontWeight: 700 }}>
-              Phase lunaire
+            <p style={{ margin: '0 0 6px', fontSize: 9.5, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.65)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 5 }}>
+              <FaMapMarkerAlt /> {t('horaires_extra.my_location')}
             </p>
-            <p style={{ margin: '0 0 2px', fontSize: 20, fontWeight: 800, color: '#FFFFFF', fontFamily: "'Playfair Display', serif", lineHeight: 1.1 }}>
-              Premier croissant
+            <p style={{ margin: '0 0 2px', fontSize: 16, fontWeight: 800, color: '#FFFFFF', lineHeight: 1.2 }}>{geo.city || '—'}</p>
+            <p style={{ margin: 0, fontSize: 11, color: 'rgba(255,255,255,0.75)' }}>
+              {geo.status === 'denied' ? t('horaires_extra.permission_denied') : `${geo.lat.toFixed(3)}°, ${geo.lng.toFixed(3)}°`}
             </p>
-            <p style={{ margin: 0, fontSize: 11, color: 'rgba(255,255,255,0.7)' }}>Méthode MWL</p>
           </div>
         </div>
       </div>
 
-      {/* ── PRAYER TIME CARDS ─────────────────────────────────────────────── */}
+      {/* ── PRAYER TIME CARDS ─────────────────────────────────────────────────── */}
       <div style={{ ...glass({ marginBottom: 20, overflow: 'hidden', padding: '0' }), position: 'relative' }}>
         <IslamicPattern opacity={isDark ? 0.04 : 0.025} />
 
-        <div style={{ padding: '20px 28px 0', borderBottom: `1px solid ${isDark ? 'rgba(200,168,75,0.1)' : 'rgba(200,168,75,0.15)'}`, position: 'relative' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', paddingBottom: 16 }}>
+        <div style={{ padding: '18px 28px 0', borderBottom: `1px solid ${isDark ? 'rgba(200,168,75,0.10)' : 'rgba(200,168,75,0.15)'}`, position: 'relative' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: 14 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <svg width="12" height="12" viewBox="0 0 20 20">
-                <polygon points="10,1 12,8 19,8 13,12 15,19 10,15 5,19 7,12 1,8 8,8" fill={gold} />
-              </svg>
-              <h2 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: C.textDark, fontFamily: "'Playfair Display', serif" }}>
-                Aujourd'hui
-              </h2>
+              <svg width="11" height="11" viewBox="0 0 20 20"><polygon points="10,1 12,8 19,8 13,12 15,19 10,15 5,19 7,12 1,8 8,8" fill={gold} /></svg>
+              <h2 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: C.textDark }}>{t('horaires_extra.today_label')} · {locLabel}</h2>
             </div>
-            <span style={{ fontSize: 11, color: C.textMid }}>
-              {WEEKDAYS_FR[weekday] || weekday} {todayDateNum} · {gregorianRaw}
+            <span style={{ fontSize: 11, color: C.textMid, fontVariantNumeric: 'tabular-nums' }}>
+              {now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
             </span>
           </div>
         </div>
 
         {/* 5 Prayer columns */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', padding: '0 16px 24px', position: 'relative' }}>
-          {PRAYERS.map((key, idx) => {
-            const isActive = currentPrayer === key;
-            const time = todayTimings?.[key] || '--:--';
-            const meta = prayerMeta[key];
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', padding: '0 12px 20px', position: 'relative', gap: 4 }}>
+          {PRAYERS.map((key) => {
+            const isActive  = currentPrayer === key;
+            const isNext    = nextInfo?.key === key && !isActive;
+            const isHovered = hoveredPrayer === key;
+            const time      = todayTimings[key] || '--:--';
+            const meta      = prayerMeta[key];
             return (
-              <div key={key} style={{
-                display: 'flex', flexDirection: 'column', alignItems: 'center',
-                padding: '22px 10px', marginTop: 16, borderRadius: 18,
-                background: isActive ? `linear-gradient(145deg, ${gold}22, ${gold}10)` : 'transparent',
-                border: isActive ? `1px solid ${gold}44` : '1px solid transparent',
-                position: 'relative', transition: 'all 0.3s ease',
-                borderRight: idx < 4 ? `1px solid ${isActive ? 'transparent' : (isDark ? 'rgba(200,168,75,0.08)' : 'rgba(200,168,75,0.12)')}` : 'none',
-              }}>
-                {/* Arabic name */}
-                <p style={{
-                  margin: '0 0 4px',
-                  fontFamily: "'Scheherazade New', serif",
-                  fontSize: 24, color: isActive ? gold : C.textDark,
-                  direction: 'rtl', lineHeight: 1.4,
+              <div
+                key={key}
+                onMouseEnter={() => setHoveredPrayer(key)}
+                onMouseLeave={() => setHoveredPrayer(null)}
+                style={{
+                  display: 'flex', flexDirection: 'column', alignItems: 'center',
+                  padding: '20px 8px', marginTop: 14, borderRadius: 18,
+                  background: isActive
+                    ? `linear-gradient(145deg, ${gold}28, ${gold}10)`
+                    : isHovered
+                    ? (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(200,168,75,0.05)')
+                    : 'transparent',
+                  border: isActive ? `1.5px solid ${gold}55` : isNext ? `1.5px dashed ${gold}40` : '1.5px solid transparent',
+                  transition: 'all 0.25s cubic-bezier(0.4,0,0.2,1)',
+                  transform: isHovered && !isActive ? 'translateY(-4px) scale(1.03)' : 'none',
+                  cursor: 'default',
+                  boxShadow: isActive ? `0 4px 20px ${gold}20` : 'none',
+                  position: 'relative', overflow: 'hidden',
                 }}>
+
+                {/* Emoji icon */}
+                <span style={{ fontSize: 20, marginBottom: 6, filter: isActive ? 'drop-shadow(0 0 8px rgba(200,168,75,0.6))' : 'none', transition: 'filter 0.3s' }}>
+                  {PRAYER_ICON[key]}
+                </span>
+
+                {/* Arabic name */}
+                <p style={{ margin: '0 0 2px', fontSize: 20, color: isActive ? gold : C.textDark, direction: 'rtl', lineHeight: 1.4, fontWeight: isActive ? 700 : 400 }}>
                   {PRAYER_ARABIC[key]}
                 </p>
 
-                {/* Latin name + subtitle */}
-                <p style={{ margin: '0 0 4px', fontSize: 12, fontWeight: 700, color: isActive ? gold : C.textDark, fontFamily: "'Playfair Display', serif" }}>
+                {/* Latin name */}
+                <p style={{ margin: '0 0 2px', fontSize: 11.5, fontWeight: 700, color: isActive ? gold : C.textDark }}>
                   {meta.label}
                 </p>
-                <p style={{ margin: '0 0 14px', fontSize: 9.5, color: isActive ? `rgba(200,168,75,0.7)` : C.textLight, letterSpacing: '0.06em' }}>
+                <p style={{ margin: '0 0 12px', fontSize: 9, color: isActive ? `rgba(200,168,75,0.7)` : C.textLight, letterSpacing: '0.06em' }}>
                   {meta.sub}
                 </p>
 
                 {/* Time */}
-                <p style={{
-                  margin: 0, fontSize: 24, fontWeight: 800, lineHeight: 1,
-                  color: isActive ? gold : C.green,
-                  fontFamily: "'Playfair Display', serif", letterSpacing: '0.02em',
-                }}>
+                <p style={{ margin: 0, fontSize: 22, fontWeight: 800, lineHeight: 1, color: isActive ? gold : C.green, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
                   {time}
                 </p>
 
                 {isActive && (
-                  <p style={{
-                    margin: '8px 0 0', fontSize: 9, letterSpacing: '0.12em',
-                    textTransform: 'uppercase', color: gold, fontWeight: 700,
-                  }}>
-                    Actuelle
-                  </p>
+                  <span style={{ marginTop: 6, fontSize: 8.5, letterSpacing: '0.12em', textTransform: 'uppercase', color: gold, fontWeight: 700, background: `${gold}18`, borderRadius: 6, padding: '2px 7px' }}>
+                    {t('horaires_extra.in_progress')}
+                  </span>
+                )}
+                {isNext && !isActive && (
+                  <span style={{ marginTop: 6, fontSize: 8.5, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(200,168,75,0.6)', fontWeight: 600 }}>
+                    {t('horaires_extra.next')}
+                  </span>
                 )}
               </div>
             );
@@ -351,129 +520,219 @@ const Horaires: React.FC = () => {
         </div>
       </div>
 
-      {/* ── NOTIFICATION BANNER ──────────────────────────────────────────── */}
-      <div style={{
-        ...glass({ padding: '16px 24px', marginBottom: 20 }),
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        borderLeft: `3px solid ${gold}`,
-      }}>
-        <div>
-          <p style={{ margin: '0 0 2px', fontSize: 11, color: gold, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Rappels de prière</p>
-          <p style={{ margin: 0, fontSize: 12.5, color: C.textMid }}>
-            Activez les notifications pour ne jamais manquer l'appel à la prière.
-          </p>
-        </div>
-        <button style={{
-          padding: '9px 18px', background: 'transparent',
-          border: `1px solid rgba(200,168,75,0.35)`,
-          borderRadius: 11, color: gold, fontSize: 12, cursor: 'pointer',
-          fontWeight: 600, whiteSpace: 'nowrap', flexShrink: 0, marginLeft: 16,
-          transition: 'all 0.2s',
-        }}
-        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(200,168,75,0.08)'; }}
-        onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
-        >
-          Gérer les notifications
-        </button>
-      </div>
-
-      {/* ── MONTHLY TABLE ─────────────────────────────────────────────────── */}
-      <div style={{ ...glass({ overflow: 'hidden' }), position: 'relative' }}>
-        <IslamicPattern opacity={isDark ? 0.03 : 0.02} />
-
-        <div style={{ padding: '20px 26px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `1px solid ${isDark ? 'rgba(200,168,75,0.08)' : 'rgba(200,168,75,0.12)'}`, position: 'relative' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <svg width="11" height="11" viewBox="0 0 20 20">
-              <polygon points="10,1 12,8 19,8 13,12 15,19 10,15 5,19 7,12 1,8 8,8" fill={gold} />
-            </svg>
+      {/* ── COUNTDOWN BANNER ─────────────────────────────────────────────────── */}
+      {nextInfo && (
+        <div style={{
+          ...glass({ padding: '18px 26px', marginBottom: 20 }),
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          borderLeft: `3px solid ${gold}`,
+          animation: 'fadeInUp 0.5s ease',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            <span style={{ fontSize: 26 }}>{PRAYER_ICON[nextInfo.key]}</span>
             <div>
-              <h2 style={{ margin: '0 0 1px', fontSize: 15, fontWeight: 700, color: C.textDark, fontFamily: "'Playfair Display', serif" }}>
-                Horaires du mois
-              </h2>
-              <p style={{ margin: 0, fontSize: 11, color: C.textMid }}>
-                {new Date().toLocaleString('fr-FR', { month: 'long', year: 'numeric' })}
+              <p style={{ margin: '0 0 2px', fontSize: 10, color: gold, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                {t('horaires_extra.next_prayer_in')}
+              </p>
+              <p style={{ margin: 0, fontSize: 14, color: C.textDark, fontWeight: 600 }}>
+                {PRAYER_ARABIC[nextInfo.key]} · {prayerMeta[nextInfo.key].label} · {todayTimings[nextInfo.key]}
               </p>
             </div>
           </div>
-          <button onClick={() => window.location.reload()} style={{
-            background: 'none', border: `1px solid rgba(200,168,75,0.25)`, borderRadius: 9,
-            padding: '6px 14px', fontSize: 11, color: gold, cursor: 'pointer', fontWeight: 600,
-            transition: 'all 0.2s',
-          }}>
-            Actualiser
-          </button>
+          <div style={{ textAlign: 'right' }}>
+            <p style={{
+              margin: 0, fontSize: 28, fontWeight: 900, color: gold,
+              fontVariantNumeric: 'tabular-nums', letterSpacing: '0.05em',
+              textShadow: `0 0 20px ${gold}55`,
+            }}>
+              {padZ(cdownH)}:{padZ(cdownM)}:{padZ(cdownS)}
+            </p>
+            <p style={{ margin: 0, fontSize: 10, color: C.textLight }}>{t('horaires_extra.hours_mins_secs')}</p>
+          </div>
+        </div>
+      )}
+
+      {/* ── MONTHLY TABLE ─────────────────────────────────────────────────────── */}
+      <div style={{
+        background: isDark ? 'rgba(12,18,32,0.90)' : '#ffffff',
+        border: `1px solid ${isDark ? 'rgba(200,168,75,0.13)' : '#e8e2d4'}`,
+        borderRadius: 20,
+        overflow: 'hidden',
+        boxShadow: isDark ? '0 4px 24px rgba(0,0,0,0.4)' : '0 2px 16px rgba(27,48,34,0.06)',
+      }}>
+
+        {/* ── Header ── */}
+        <div style={{
+          padding: '18px 24px 16px',
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : '#f0ece0'}`,
+        }}>
+          <div>
+            <h2 style={{ margin: '0 0 3px', fontSize: 16, fontWeight: 700, color: C.textDark, fontFamily: "'Cairo', sans-serif" }}>
+              {t('horaires_extra.month_schedule')}
+            </h2>
+            <p style={{ margin: 0, fontSize: 12, color: C.textMid, textTransform: 'capitalize', fontFamily: "'Cairo', sans-serif" }}>
+              {viewMonthLabel}
+            </p>
+          </div>
+
+          {/* Navigation */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <button
+              onClick={goPrevMonth}
+              style={{ width: 34, height: 34, borderRadius: 10, border: `1px solid ${isDark ? 'rgba(255,255,255,0.12)' : '#e0dbd0'}`, background: isDark ? 'rgba(255,255,255,0.04)' : '#faf8f3', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.textMid, fontSize: 16, fontWeight: 600, transition: 'all 0.18s' }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = gold; e.currentTarget.style.color = gold; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = isDark ? 'rgba(255,255,255,0.12)' : '#e0dbd0'; e.currentTarget.style.color = C.textMid; }}
+            >‹</button>
+
+            <button
+              onClick={goToday}
+              style={{
+                padding: '7px 16px', borderRadius: 10,
+                border: `1px solid ${isCurrentMonthView ? gold : (isDark ? 'rgba(255,255,255,0.12)' : '#e0dbd0')}`,
+                background: isCurrentMonthView ? (isDark ? 'rgba(200,168,75,0.12)' : 'rgba(200,168,75,0.08)') : (isDark ? 'rgba(255,255,255,0.04)' : '#faf8f3'),
+                color: isCurrentMonthView ? gold : C.textDark,
+                fontSize: 12.5, fontWeight: 600, cursor: 'pointer',
+                fontFamily: "'Cairo', sans-serif", transition: 'all 0.18s',
+              }}
+            >
+              {t('horaires_extra.today') || "Aujourd'hui"}
+            </button>
+
+            <button
+              onClick={goNextMonth}
+              style={{ width: 34, height: 34, borderRadius: 10, border: `1px solid ${isDark ? 'rgba(255,255,255,0.12)' : '#e0dbd0'}`, background: isDark ? 'rgba(255,255,255,0.04)' : '#faf8f3', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.textMid, fontSize: 16, fontWeight: 600, transition: 'all 0.18s' }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = gold; e.currentTarget.style.color = gold; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = isDark ? 'rgba(255,255,255,0.12)' : '#e0dbd0'; e.currentTarget.style.color = C.textMid; }}
+            >›</button>
+
+            <div style={{ width: 34, height: 34, borderRadius: 10, border: `1px solid ${isDark ? 'rgba(255,255,255,0.12)' : '#e0dbd0'}`, background: isDark ? 'rgba(255,255,255,0.04)' : '#faf8f3', display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.textMid }}>
+              <FaCalendarAlt style={{ fontSize: 13 }} />
+            </div>
+          </div>
         </div>
 
-        <div style={{ overflowX: 'auto', position: 'relative' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5 }}>
-            <thead>
-              <tr style={{ background: isDark ? 'rgba(200,168,75,0.04)' : 'rgba(200,168,75,0.03)' }}>
-                <th style={{ padding: '12px 20px', textAlign: 'left', fontWeight: 700, color: C.textMid, fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', borderBottom: `1px solid ${isDark ? 'rgba(200,168,75,0.08)' : 'rgba(200,168,75,0.12)'}` }}>Date</th>
-                {PRAYERS.map(p => (
-                  <th key={p} style={{ padding: '12px 14px', textAlign: 'center', fontWeight: 700, color: C.textMid, fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', borderBottom: `1px solid ${isDark ? 'rgba(200,168,75,0.08)' : 'rgba(200,168,75,0.12)'}` }}>
-                    <span style={{ fontFamily: "'Scheherazade New', serif", fontSize: 16, display: 'block', color: isDark ? goldLight : '#1B3022', marginBottom: 2 }}>
-                      {PRAYER_ARABIC[p]}
-                    </span>
-                    {prayerMeta[p].label}
+        {/* ── Table ── */}
+        <div style={{ overflowX: 'auto' }}>
+          {loadingMonthView ? (
+            <div style={{ padding: '40px', textAlign: 'center' }}>
+              <div style={{ width: 32, height: 32, border: `2px solid rgba(200,168,75,0.2)`, borderTopColor: gold, borderRadius: '50%', animation: 'spin 0.9s linear infinite', margin: '0 auto' }} />
+            </div>
+          ) : (
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : '#f0ece0'}` }}>
+                  <th style={{ padding: '12px 24px', textAlign: 'left', fontWeight: 600, color: C.textMid, fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase', fontFamily: "'Cairo', sans-serif" }}>
+                    {t('horaires.day')}
                   </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {visibleDays.map((day, idx) => {
-                const gDate = day.gregorian?.date || '';
-                const dayNum = parseInt(gDate.split('-')[2] || '0', 10);
-                const isToday = dayNum === todayDateNum;
-                const dayName = WEEKDAYS_FR[day.gregorian?.weekday?.en || ''] || '';
-                const isFriday = day.gregorian?.weekday?.en === 'Friday';
-                return (
-                  <tr key={gDate} style={{
-                    background: isToday
-                      ? (isDark ? 'rgba(200,168,75,0.06)' : 'rgba(200,168,75,0.04)')
-                      : isFriday
-                      ? (isDark ? 'rgba(46,100,67,0.06)' : 'rgba(46,100,67,0.03)')
-                      : idx % 2 === 0 ? 'transparent' : (isDark ? 'rgba(255,255,255,0.015)' : 'rgba(0,0,0,0.012)'),
-                    borderBottom: `1px solid ${isDark ? 'rgba(200,168,75,0.06)' : 'rgba(200,168,75,0.08)'}`,
-                    borderLeft: isToday ? `3px solid ${gold}` : '3px solid transparent',
-                    transition: 'background 0.2s',
-                  }}>
-                    <td style={{ padding: '10px 20px' }}>
-                      <p style={{ margin: '0 0 1px', fontSize: 13, fontWeight: isToday ? 800 : 500, color: isToday ? gold : C.textDark, fontFamily: isToday ? "'Playfair Display', serif" : 'inherit' }}>
-                        {dayNum} {new Date().toLocaleString('fr-FR', { month: 'short' })}
-                      </p>
-                      <p style={{ margin: 0, fontSize: 10, color: isFriday ? C.green : C.textLight, fontWeight: isFriday ? 600 : 400 }}>{dayName}</p>
-                    </td>
-                    {PRAYERS.map(p => (
-                      <td key={p} style={{ padding: '10px 14px', textAlign: 'center', fontWeight: isToday ? 700 : 400, color: isToday ? gold : C.textDark, fontVariantNumeric: 'tabular-nums', fontSize: 13 }}>
-                        {day.timings?.[p] || '--:--'}
+                  {PRAYERS.map(p => (
+                    <th key={p} style={{ padding: '12px 16px', textAlign: 'center', fontWeight: 600, color: C.textMid, fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase', fontFamily: "'Cairo', sans-serif" }}>
+                      <span style={{ fontSize: 17, display: 'block', marginBottom: 3, color: p === 'Isha' ? (isDark ? '#7ea8d4' : '#5b7ba8') : (isDark ? goldLight : '#b8943a') }}>
+                        {PRAYER_ICON[p]}
+                      </span>
+                      {prayerMeta[p].label}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {visibleDays.length === 0 ? (
+                  <tr><td colSpan={6} style={{ padding: '32px', textAlign: 'center', color: C.textLight, fontSize: 13 }}>Aucune donnée disponible</td></tr>
+                ) : visibleDays.map((day) => {
+                  const gDate  = day.gregorian?.date || '';
+                  const dayNum = parseInt(gDate.split('-')[0] || '0', 10);
+                  const isToday = isCurrentMonthView && dayNum === todayNum;
+                  const dayName = t(WEEKDAY_I18N_KEY[day.gregorian?.weekday?.en || ''] || 'days.monday') || '';
+                  const isFri  = day.gregorian?.weekday?.en === 'Friday';
+                  const shortMonth = new Date(viewYear, viewMonth - 1, 1)
+                    .toLocaleString('fr-FR', { month: 'short' });
+                  return (
+                    <tr key={gDate} style={{
+                      background: isToday
+                        ? (isDark ? 'rgba(200,168,75,0.07)' : '#f5f3ee')
+                        : 'transparent',
+                      borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.04)' : '#f4f0e6'}`,
+                      transition: 'background 0.15s',
+                    }}
+                    onMouseEnter={e => { if (!isToday) (e.currentTarget as HTMLElement).style.background = isDark ? 'rgba(255,255,255,0.03)' : '#faf9f5'; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = isToday ? (isDark ? 'rgba(200,168,75,0.07)' : '#f5f3ee') : 'transparent'; }}
+                    >
+                      <td style={{ padding: '13px 24px' }}>
+                        <p style={{ margin: '0 0 2px', fontSize: 13.5, fontWeight: isToday ? 700 : 500, color: isToday ? gold : C.textDark, fontFamily: "'Cairo', sans-serif" }}>
+                          {dayNum} {shortMonth.charAt(0).toUpperCase() + shortMonth.slice(1)}
+                        </p>
+                        <p style={{ margin: 0, fontSize: 11, color: isFri ? C.green : C.textLight, fontWeight: isFri ? 600 : 400, fontFamily: "'Cairo', sans-serif" }}>
+                          {dayName}
+                        </p>
                       </td>
-                    ))}
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                      {PRAYERS.map(p => (
+                        <td key={p} style={{
+                          padding: '13px 16px', textAlign: 'center',
+                          fontFamily: "'Cairo', sans-serif",
+                          fontSize: 13.5, fontVariantNumeric: 'tabular-nums',
+                          color: isToday ? C.textDark : C.textMid,
+                          fontWeight: isToday ? 600 : 400,
+                        }}>
+                          {(day.timings?.[p] || '--:--').substring(0, 5)}
+                        </td>
+                      ))}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
         </div>
 
-        <div style={{ padding: '14px', textAlign: 'center', borderTop: `1px solid ${isDark ? 'rgba(200,168,75,0.08)' : 'rgba(200,168,75,0.1)'}` }}>
+        {/* ── Show more button ── */}
+        <div style={{ padding: '14px', textAlign: 'center', borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : '#f0ece0'}` }}>
           <button
             onClick={() => setShowFullMonth(v => !v)}
-            style={{ background: 'none', border: 'none', color: gold, fontSize: 12.5, cursor: 'pointer', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 6 }}
+            style={{
+              background: 'none',
+              border: `1px solid ${isDark ? 'rgba(255,255,255,0.14)' : '#dedad0'}`,
+              borderRadius: 20, padding: '8px 28px',
+              color: C.textDark, fontSize: 13, cursor: 'pointer',
+              fontWeight: 500, fontFamily: "'Cairo', sans-serif",
+              display: 'inline-flex', alignItems: 'center', gap: 8,
+              transition: 'all 0.18s',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = gold; e.currentTarget.style.color = gold; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = isDark ? 'rgba(255,255,255,0.14)' : '#dedad0'; e.currentTarget.style.color = C.textDark; }}
           >
-            {showFullMonth ? 'Réduire' : 'Voir tout le mois'} {showFullMonth ? '∧' : '∨'}
+            {showFullMonth
+              ? <>{t('horaires_extra.show_less')} <span style={{ fontSize: 11 }}>∧</span></>
+              : <>{t('horaires_extra.show_month')} <span style={{ fontSize: 11 }}>∨</span></>}
           </button>
         </div>
       </div>
 
-      {/* Footer note */}
-      <div style={{ marginTop: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 4px' }}>
-        <p style={{ margin: 0, fontSize: 10.5, color: C.textLight }}>
-          Horaires calculés automatiquement · peuvent légèrement varier selon la position exacte.
+      {/* ── Info bar ── */}
+      <div style={{
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        padding: '10px 18px', marginTop: 12,
+        background: isDark ? 'rgba(255,255,255,0.025)' : '#faf8f3',
+        border: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : '#ede8db'}`,
+        borderRadius: 12,
+      }}>
+        <p style={{ margin: 0, fontSize: 11, color: C.textLight, display: 'flex', alignItems: 'center', gap: 7, fontFamily: "'Cairo', sans-serif" }}>
+          <span style={{ fontSize: 14, flexShrink: 0 }}>ⓘ</span>
+          {t('horaires_extra.footer')}
         </p>
-        <p style={{ margin: 0, fontSize: 10.5, color: gold, fontWeight: 600 }}>Méthode : MWL</p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0, marginLeft: 16 }}>
+          <span style={{ fontSize: 11, color: C.textMid, fontFamily: "'Cairo', sans-serif" }}>Méthode de calcul</span>
+          <span style={{ fontSize: 11, fontWeight: 700, color: gold, fontFamily: "'Cairo', sans-serif" }}>MWL</span>
+          <FaSyncAlt
+            onClick={requestLocation}
+            title="Actualiser"
+            style={{ fontSize: 12, color: C.textLight, cursor: 'pointer', transition: 'color 0.2s' }}
+            onMouseEnter={(e: React.MouseEvent<SVGElement>) => (e.currentTarget.style.color = gold)}
+            onMouseLeave={(e: React.MouseEvent<SVGElement>) => (e.currentTarget.style.color = C.textLight)}
+          />
+        </div>
       </div>
 
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}} @keyframes fadeInUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}`}</style>
     </div>
   );
 };

@@ -75,5 +75,45 @@
   "asma_progress": "تقدم أسماء الله الحسنى",
   "names_learned": "الأسماء المتعلمة",
   "the_most_merciful": "الرحمن الرحيم",
-  "see_full_list": "عرض القائمة كاملة"
+  "see_full_list": "عرض القائمة كاملة",
+  "horaires": {
+    "title": "مواقيت الصلاة",
+    "day": "اليوم",
+    "error": "تعذر تحميل مواقيت الصلاة. تحقق من اتصالك."
+  },
+  "horaires_extra": {
+    "locating": "جارٍ تحديد الموقع...",
+    "loading_schedule": "جارٍ تحميل المواقيت...",
+    "retry": "إعادة المحاولة",
+    "today": "اليوم",
+    "gregorian_date": "التاريخ الميلادي",
+    "hijri_date": "التاريخ الهجري",
+    "my_location": "موقعي",
+    "permission_denied": "الوصول مرفوض",
+    "today_label": "اليوم",
+    "in_progress": "جارية",
+    "next": "التالية",
+    "next_prayer_in": "الصلاة القادمة في",
+    "hours_mins_secs": "سا : د : ث",
+    "month_schedule": "مواقيت الشهر",
+    "show_less": "عرض أقل",
+    "show_month": "عرض الشهر كاملاً",
+    "footer": "المواقيت محسوبة وفق طريقة رابطة العالم الإسلامي. قد تتفاوت المواقيت قليلاً."
+  },
+  "salat_extra": {
+    "fajr_sub": "الفجر",
+    "dhuhr_sub": "الظهر",
+    "asr_sub": "العصر",
+    "maghrib_sub": "المغرب",
+    "isha_sub": "العشاء"
+  },
+  "days": {
+    "monday": "الإثنين",
+    "tuesday": "الثلاثاء",
+    "wednesday": "الأربعاء",
+    "thursday": "الخميس",
+    "friday": "الجمعة",
+    "saturday": "السبت",
+    "sunday": "الأحد"
+  }
 }

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../hooks/useLanguage';
 import { lightTheme, darkTheme } from '../theme/colors';
@@ -93,8 +94,8 @@ function Compass({ qiblaAngle, heading, size = 280, C }: {
       <circle cx={cx} cy={cy} r={outerR} fill="none" stroke={C.gold} strokeWidth={2} opacity={0.5} />
       <circle cx={cx} cy={cy} r={outerR - 1} fill={C.cardBg} stroke={C.border} strokeWidth={0.5} />
       {ticks}
-      {cardinals.map(({ l, d: deg, c, fs }) => { const r = toRad(deg); return <text key={l} x={cx + labelR * Math.sin(r)} y={cy - labelR * Math.cos(r) + fs / 3} textAnchor="middle" fill={c} fontSize={fs} fontWeight={700} fontFamily="'Playfair Display', serif">{l}</text>; })}
-      {intercardinals.map(({ l, d: deg }) => { const r = toRad(deg); return <text key={l} x={cx + labelR * Math.sin(r)} y={cy - labelR * Math.cos(r) + 4} textAnchor="middle" fill={C.textLight} fontSize={8} fontFamily="'Inter', sans-serif">{l}</text>; })}
+      {cardinals.map(({ l, d: deg, c, fs }) => { const r = toRad(deg); return <text key={l} x={cx + labelR * Math.sin(r)} y={cy - labelR * Math.cos(r) + fs / 3} textAnchor="middle" fill={c} fontSize={fs} fontWeight={700} fontFamily="'Cairo', sans-serif">{l}</text>; })}
+      {intercardinals.map(({ l, d: deg }) => { const r = toRad(deg); return <text key={l} x={cx + labelR * Math.sin(r)} y={cy - labelR * Math.cos(r) + 4} textAnchor="middle" fill={C.textLight} fontSize={8} fontFamily="'Cairo', sans-serif">{l}</text>; })}
       <circle cx={cx} cy={cy} r={faceR} fill={C.cardBg2} stroke={C.border} strokeWidth={1} />
       <polygon points={`${tip.x},${tip.y} ${cx + perp.x},${cy + perp.y} ${tail.x},${tail.y} ${cx - perp.x},${cy - perp.y}`} fill={C.gold} style={{ filter: 'drop-shadow(0 2px 6px rgba(200,168,75,0.4))', transition: 'all 0.25s ease' }} />
       <polygon points={`${cx + perp.x},${cy + perp.y} ${tail.x},${tail.y} ${cx - perp.x},${cy - perp.y}`} fill={C.textLight} opacity={0.5} style={{ transition: 'all 0.25s ease' }} />
@@ -109,11 +110,11 @@ function Compass({ qiblaAngle, heading, size = 280, C }: {
 interface GeoState { lat: number; lon: number; city: string; qibla: number; distance: number; }
 
 export default function Qibla() {
+  const { t } = useTranslation();
   const { theme } = useTheme();
   const { language } = useLanguage();
   const C = theme === 'light' ? lightTheme : darkTheme;
   const isAr = language === 'ar';
-  const d = (fr: string, en: string, ar: string) => language === 'en' ? en : isAr ? ar : fr;
 
   const [geo, setGeo]                   = useState<GeoState | null>(null);
   const [heading, setHeading]           = useState<number | null>(null);
@@ -141,12 +142,12 @@ export default function Qibla() {
       () => {
         const lat = 33.2625, lon = -7.5898;
         setGeo({ lat, lon, city: 'Berrechid, Maroc', qibla: calcQibla(lat, lon), distance: calcDistance(lat, lon) });
-        setGeoError(d('Position par défaut (Berrechid) — géolocalisation refusée.', 'Default position (Berrechid) — geolocation denied.', 'الموقع الافتراضي (برشيد) — تم رفض تحديد الموقع.'));
+        setGeoError(t('qibla_extra.default_pos'));
         setGeoLoading(false);
       },
       { timeout: 8000 }
     );
-  }, []);
+  }, [t]);
 
   useEffect(() => { fetchGeo(); }, [fetchGeo]);
 
@@ -160,12 +161,12 @@ export default function Qibla() {
     if (typeof DeviceOrientationEvent !== 'undefined' && typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
       try {
         const state = await (DeviceOrientationEvent as any).requestPermission();
-        if (state !== 'granted') { setSensorError(d('Permission refusée.', 'Permission denied.', 'تم رفض الإذن.')); return; }
-      } catch { setSensorError(d('Erreur de permission.', 'Permission error.', 'خطأ في الإذن.')); return; }
+        if (state !== 'granted') { setSensorError(t('qibla_extra.permission_denied_msg')); return; }
+      } catch { setSensorError(t('qibla_extra.permission_error_msg')); return; }
     }
     window.addEventListener('deviceorientation', handleOrientation);
     setSensorActive(true);
-  }, [handleOrientation]);
+  }, [handleOrientation, t]);
 
   const stopSensor = useCallback(() => {
     window.removeEventListener('deviceorientation', handleOrientation);
@@ -186,33 +187,32 @@ export default function Qibla() {
   const qibla = geo?.qibla ?? 245;
 
   return (
-    <div style={{ fontFamily: 'Inter, sans-serif', minHeight: '100vh', background: C.pageBg, direction: isAr ? 'rtl' : 'ltr' }}>
+    <div style={{ fontFamily: "'Cairo', sans-serif", minHeight: '100vh', background: C.pageBg, direction: isAr ? 'rtl' : 'ltr' }}>
 
       {/* ── HERO ─────────────────────────────────────────────────────────────── */}
       <div style={{
-        backgroundImage: `linear-gradient(160deg, rgba(12,34,24,0.96) 0%, rgba(26,61,40,0.90) 55%, rgba(14,45,30,0.96) 100%), url('/photomosquee.png')`,
-        backgroundSize: 'cover', backgroundPosition: 'center 20%',
-        padding: '64px 24px 56px', position: 'relative', overflow: 'hidden',
+        backgroundImage: `linear-gradient(160deg, rgba(10,26,18,0.82) 0%, rgba(20,50,32,0.70) 55%, rgba(12,32,22,0.82) 100%), url('/photomosquee.png')`,
+        backgroundSize: 'cover', backgroundPosition: 'center 30%',
+        padding: '34px 24px 30px', position: 'relative', overflow: 'hidden',
+        borderBottom: '1px solid rgba(200,168,75,0.2)',
+        boxShadow: '0 4px 24px rgba(0,0,0,0.2)',
       }}>
-        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'linear-gradient(90deg, transparent, #C8A84B, #E0C870, #C8A84B, transparent)' }} />
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: 'linear-gradient(90deg, transparent, #C8A84B 20%, #E0C870 50%, #C8A84B 80%, transparent)' }} />
         <IslamicPattern />
-        {isAr && (
-          <div style={{
-            position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontFamily: "'Scheherazade New', serif", fontSize: 'clamp(22px,5vw,56px)',
-            color: '#ffffff', opacity: 0.04, pointerEvents: 'none', userSelect: 'none',
-            textAlign: 'center', padding: '0 24px',
-          }}>
-            فَوَلِّ وَجْهَكَ شَطْرَ الْمَسْجِدِ الْحَرَامِ
-          </div>
-        )}
         <div style={{ maxWidth: 820, margin: '0 auto', position: 'relative', zIndex: 1 }}>
-          <h1 style={{ fontFamily: isAr ? "'Scheherazade New', serif" : "'Playfair Display', serif", fontSize: 'clamp(28px,5vw,44px)', fontWeight: 700, color: '#F5F0E2', margin: '0 0 10px' }}>
-            {d('Boussole Qibla', 'Qibla Compass', 'بوصلة القبلة')}
-          </h1>
-          <p style={{ color: 'rgba(168,196,176,0.9)', fontSize: 15, margin: 0, maxWidth: 480 }}>
-            {d('Trouvez la direction de la Kaaba depuis n\'importe où dans le monde', 'Find the direction of the Kaaba from anywhere in the world', 'ابحث عن اتجاه الكعبة من أي مكان في العالم')}
-          </p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+            <div style={{ height: 1, width: 18, background: 'rgba(200,168,75,0.5)' }} />
+            <svg width="7" height="7" viewBox="0 0 20 20"><polygon points="10,1 12,8 19,8 13,12 15,19 10,15 5,19 7,12 1,8 8,8" fill="#C8A84B" /></svg>
+            <div style={{ height: 1, width: 18, background: 'rgba(200,168,75,0.5)' }} />
+          </div>
+          <div style={{ borderLeft: '3px solid rgba(200,168,75,0.75)', paddingLeft: 16 }}>
+            <h1 style={{ fontFamily: "'Cairo', sans-serif", fontSize: 'clamp(22px,4vw,34px)', fontWeight: 700, color: '#F5F0E2', margin: '0 0 7px', letterSpacing: '-0.01em' }}>
+              {t('qibla_extra.hero_title')}
+            </h1>
+            <p style={{ color: 'rgba(168,196,176,0.85)', fontSize: 13.5, margin: 0, maxWidth: 480 }}>
+              {t('qibla_extra.hero_subtitle')}
+            </p>
+          </div>
         </div>
       </div>
 
@@ -227,13 +227,13 @@ export default function Qibla() {
               </div>
               <span style={{ fontSize: 12.5, color: C.textMid, display: 'flex', alignItems: 'center', gap: 6 }}>
                 <SvgArrow color={C.green} size={11} />
-                {d('Utiliser ma position', 'Use my location', 'استخدام موقعي')}
+                {t('qibla_extra.use_my_location')}
               </span>
             </div>
             <button onClick={() => { setCalibrating(true); setTimeout(() => setCalibrating(false), 2000); }}
-              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 10, border: `1px solid ${C.border}`, background: C.cardBg2, cursor: 'pointer', fontSize: 12.5, color: C.textMid, fontFamily: 'Inter, sans-serif' }}>
+              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 10, border: `1px solid ${C.border}`, background: C.cardBg2, cursor: 'pointer', fontSize: 12.5, color: C.textMid, fontFamily: "'Cairo', sans-serif" }}>
               <SvgRefresh color={C.textLight} size={11} spinning={calibrating} />
-              {d('Calibrer', 'Calibrate', 'معايرة')}
+              {t('qibla_extra.calibrate')}
             </button>
           </div>
 
@@ -246,21 +246,21 @@ export default function Qibla() {
               <Compass qiblaAngle={qibla} heading={heading} size={280} C={C} />
             )}
             <div style={{ minWidth: 180, textAlign: 'center' }}>
-              <p style={{ margin: '0 0 4px', fontSize: 62, fontWeight: 800, color: C.green, lineHeight: 1, fontFamily: "'Playfair Display', serif", letterSpacing: '-2px' }}>{Math.round(qibla)}°</p>
+              <p style={{ margin: '0 0 4px', fontSize: 62, fontWeight: 800, color: C.green, lineHeight: 1, fontFamily: "'Cairo', sans-serif", letterSpacing: '-2px' }}>{Math.round(qibla)}°</p>
               <p style={{ margin: '0 0 20px', fontSize: 17, fontWeight: 600, color: C.textDark }}>{cardinalName(qibla, language)}</p>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, marginBottom: 18 }}>
                 <div style={{ width: 8, height: 8, borderRadius: '50%', background: sensorActive ? '#27ae60' : C.border, animation: sensorActive ? 'pulse 1.5s infinite' : 'none' }} />
                 <span style={{ fontSize: 11.5, color: sensorActive ? '#27ae60' : C.textLight }}>
-                  {sensorActive ? d('Boussole active', 'Compass active', 'البوصلة نشطة') : d('Boussole inactive', 'Compass inactive', 'البوصلة غير نشطة')}
+                  {sensorActive ? t('qibla_extra.compass_active') : t('qibla_extra.compass_inactive')}
                 </span>
               </div>
               {!sensorActive && !sensorError && (
-                <button onClick={startSensor} style={{ padding: '10px 22px', background: `linear-gradient(135deg, ${C.green}, #4A9468)`, border: 'none', borderRadius: 10, color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer', marginBottom: 10, fontFamily: 'Inter, sans-serif' }}>
-                  {d('Activer la boussole', 'Activate compass', 'تفعيل البوصلة')}
+                <button onClick={startSensor} style={{ padding: '10px 22px', background: `linear-gradient(135deg, ${C.green}, #4A9468)`, border: 'none', borderRadius: 10, color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer', marginBottom: 10, fontFamily: "'Cairo', sans-serif" }}>
+                  {t('qibla_extra.activate_compass')}
                 </button>
               )}
               {sensorError && <p style={{ fontSize: 11.5, color: '#c0392b', margin: '0 0 10px' }}>{sensorError}</p>}
-              {heading !== null && <p style={{ fontSize: 11, color: C.textLight, margin: 0 }}>{d('Cap appareil', 'Device heading', 'اتجاه الجهاز')} : {Math.round(heading)}°</p>}
+              {heading !== null && <p style={{ fontSize: 11, color: C.textLight, margin: 0 }}>{t('qibla_extra.device_heading')} : {Math.round(heading)}°</p>}
             </div>
           </div>
           {geoError && <p style={{ margin: '18px 0 0', fontSize: 12, color: C.textLight, textAlign: 'center', fontStyle: 'italic' }}>{geoError}</p>}
@@ -270,16 +270,16 @@ export default function Qibla() {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
           <div style={card({ padding: '22px 24px' })}>
             <p style={{ margin: '0 0 14px', fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: C.textLight, fontWeight: 600 }}>
-              {d('Ma position actuelle', 'My current position', 'موقعي الحالي')}
+              {t('qibla_extra.my_current_pos')}
             </p>
-            <p style={{ margin: '0 0 4px', fontSize: 20, fontWeight: 700, color: C.textDark, fontFamily: "'Playfair Display', serif" }}>{geo?.city ?? '—'}</p>
+            <p style={{ margin: '0 0 4px', fontSize: 20, fontWeight: 700, color: C.textDark, fontFamily: "'Cairo', sans-serif" }}>{geo?.city ?? '—'}</p>
             {geo && (
               <>
                 <p style={{ margin: '0 0 18px', fontSize: 11.5, color: C.textMid }}>{geo.lat.toFixed(4)}° N, {Math.abs(geo.lon).toFixed(4)}° {geo.lon >= 0 ? 'E' : 'W'}</p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {[
-                    { label: d('Distance à la Kaaba', 'Distance to Kaaba', 'المسافة إلى الكعبة'), value: `${geo.distance.toLocaleString('fr-FR')} km`, icon: <SvgPin color={C.green} size={13} /> },
-                    { label: d('Direction Qibla', 'Qibla direction', 'اتجاه القبلة'), value: `${Math.round(qibla)}° ${cardinalName(qibla, language)}`, icon: <SvgArrow color={C.green} size={11} /> },
+                    { label: t('qibla_extra.distance_kaaba'), value: `${geo.distance.toLocaleString(undefined)} km`, icon: <SvgPin color={C.green} size={13} /> },
+                    { label: t('qibla_extra.qibla_direction'), value: `${Math.round(qibla)}° ${cardinalName(qibla, language)}`, icon: <SvgArrow color={C.green} size={11} /> },
                   ].map(({ label, value, icon }) => (
                     <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', background: C.cardBg2, borderRadius: 10 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -292,15 +292,15 @@ export default function Qibla() {
                 </div>
               </>
             )}
-            <button onClick={fetchGeo} style={{ marginTop: 14, width: '100%', padding: '9px', background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 10, color: C.textMid, fontSize: 12.5, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, fontFamily: 'Inter, sans-serif' }}>
+            <button onClick={fetchGeo} style={{ marginTop: 14, width: '100%', padding: '9px', background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 10, color: C.textMid, fontSize: 12.5, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, fontFamily: "'Cairo', sans-serif" }}>
               <SvgRefresh color={C.textLight} size={11} />
-              {d('Actualiser la position', 'Refresh position', 'تحديث الموقع')}
+              {t('qibla_extra.refresh_pos')}
             </button>
           </div>
 
           <div style={card({ padding: '22px 24px', display: 'flex', flexDirection: 'column' })}>
             <p style={{ margin: '0 0 14px', fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: C.textLight, fontWeight: 600 }}>
-              {d('Carte de la Qibla', 'Qibla Map', 'خريطة القبلة')}
+              {t('qibla_extra.qibla_map')}
             </p>
             <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: C.cardBg2, borderRadius: 14, padding: 16 }}>
               <svg viewBox="0 0 200 160" width="100%" style={{ maxHeight: 180 }}>
@@ -308,10 +308,10 @@ export default function Qibla() {
                 {[40, 80, 120, 160].map(x => <line key={x} x1={x} y1={0} x2={x} y2={160} stroke={C.border} strokeWidth={0.5} />)}
                 <circle cx={60} cy={100} r={6} fill={C.green} />
                 <circle cx={60} cy={100} r={10} fill={C.green} opacity={0.2} />
-                <text x={60} y={118} textAnchor="middle" fontSize={8} fill={C.textMid}>{d('Vous', 'You', 'أنت')}</text>
+                <text x={60} y={118} textAnchor="middle" fontSize={8} fill={C.textMid}>{t('qibla_extra.you')}</text>
                 <line x1={60} y1={100} x2={160} y2={38} stroke={C.gold} strokeWidth={1.5} strokeDasharray="4 3" />
                 <rect x={154} y={30} width={12} height={10} rx={2} fill={C.green} />
-                <text x={162} y={26} textAnchor="middle" fontSize={8} fill={C.textMid}>{d('Mecca', 'Mecca', 'مكة')}</text>
+                <text x={162} y={26} textAnchor="middle" fontSize={8} fill={C.textMid}>{t('qibla_extra.mecca')}</text>
                 <text x={76} y={91} fontSize={7} fill={C.gold}>{Math.round(qibla)}°</text>
               </svg>
             </div>
@@ -320,10 +320,10 @@ export default function Qibla() {
 
         <div style={{ ...card({ padding: '18px 26px' }), borderLeft: isAr ? 'none' : `3px solid #C8A84B`, borderRight: isAr ? `3px solid #C8A84B` : 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
           <p style={{ margin: 0, fontSize: 13, color: C.textMid, fontStyle: 'italic' }}>
-            {d('Placez votre appareil à plat pour une meilleure précision. Éloignez-vous des objets métalliques.', 'Place your device flat for better accuracy. Stay away from metal objects.', 'ضع جهازك بشكل مستوٍ للحصول على دقة أفضل. ابتعد عن الأجسام المعدنية.')}
+            {t('qibla_extra.tip')}
           </p>
           <span style={{ fontSize: 12, color: sensorActive ? '#27ae60' : C.textLight, fontWeight: 600, whiteSpace: 'nowrap' }}>
-            {d('Précision', 'Accuracy', 'الدقة')} : {sensorActive ? d('Élevée', 'High', 'عالية') : d('Calculée', 'Calculated', 'محسوبة')}
+            {t('qibla_extra.accuracy')} : {sensorActive ? t('qibla_extra.accuracy_high') : t('qibla_extra.accuracy_calc')}
           </span>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '../context/ThemeContext';
 import { lightTheme, darkTheme } from '../theme/colors';
 
@@ -6,7 +7,7 @@ const TARGETS = [33, 99] as const;
 
 interface DailyStats { date: string; totalTaps: number; completedCycles: number; }
 
-function getTodayDate(): string { return new Date().toLocaleDateString('fr-FR'); }
+function getTodayDate(): string { return new Date().toLocaleDateString(undefined); }
 
 function loadDailyStats(): DailyStats {
   try {
@@ -56,6 +57,7 @@ function ProgressRing({ radius, strokeWidth, progress, color, trackColor }: {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function Tasbih() {
+  const { t } = useTranslation();
   const { theme } = useTheme();
   const C = theme === 'light' ? lightTheme : darkTheme;
   const isDark = theme === 'dark';
@@ -74,9 +76,9 @@ export default function Tasbih() {
   const [currentDhikr, setCurrentDhikr] = useState(0);
 
   const dhikrList = [
-    { arabic: 'سُبْحَانَ اللَّهِ', latin: 'Subhanallah', meaning: 'Gloire à Allah', count: '33' },
-    { arabic: 'الْحَمْدُ لِلَّهِ', latin: 'Alhamdulillah', meaning: 'Louange à Allah', count: '33' },
-    { arabic: 'اللَّهُ أَكْبَرُ', latin: 'Allahu Akbar', meaning: 'Allah est le Plus Grand', count: '34' },
+    { arabic: 'سُبْحَانَ اللَّهِ', latin: 'Subhanallah', meaning: t('tasbih.subhanallah_meaning'), count: '33' },
+    { arabic: 'الْحَمْدُ لِلَّهِ', latin: 'Alhamdulillah', meaning: t('tasbih.alhamdulillah_meaning'), count: '33' },
+    { arabic: 'اللَّهُ أَكْبَرُ', latin: 'Allahu Akbar', meaning: t('tasbih.allahu_akbar_meaning'), count: '34' },
   ];
 
   useEffect(() => { localStorage.setItem('tasbih-count', count.toString()); }, [count]);
@@ -105,7 +107,7 @@ export default function Tasbih() {
     setDailyStats(ds => ({ ...ds, totalTaps: Math.max(0, ds.totalTaps - 1) }));
   };
 
-  const changeTarget = (t: number) => { setTarget(t); setCount(0); setShowCustom(false); };
+  const changeTarget = (val: number) => { setTarget(val); setCount(0); setShowCustom(false); };
   const applyCustomTarget = () => {
     const val = parseInt(customTarget, 10);
     if (val > 0 && val <= 9999) { changeTarget(val); setCustomTarget(''); }
@@ -131,39 +133,36 @@ export default function Tasbih() {
 
       {/* ── HERO ─────────────────────────────────────────────────────────── */}
       <div style={{
-        position: 'relative', borderRadius: 26, overflow: 'hidden', marginBottom: 28,
-        backgroundImage: `linear-gradient(145deg, rgba(6,15,10,0.96) 0%, rgba(18,48,30,0.88) 55%, rgba(8,20,14,0.78) 100%), url('/photomosquee.png')`,
-        backgroundSize: 'cover', backgroundPosition: 'center',
-        minHeight: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
-        padding: '40px 36px 32px',
+        position: 'relative', borderRadius: 20, overflow: 'hidden', marginBottom: 24,
+        backgroundImage: `linear-gradient(145deg, rgba(6,15,10,0.80) 0%, rgba(18,48,30,0.68) 55%, rgba(8,20,14,0.60) 100%), url('/photomosquee.png')`,
+        backgroundSize: 'cover', backgroundPosition: 'center 30%',
+        display: 'flex', flexDirection: 'column', justifyContent: 'flex-start',
+        padding: '28px 32px 24px',
+        border: '1px solid rgba(200,168,75,0.14)',
+        boxShadow: '0 6px 28px rgba(0,0,0,0.22)',
       }}>
-        <IslamicPattern opacity={0.08} />
-        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, transparent, ${gold}, ${goldLight}, ${gold}, transparent)` }} />
-
-        {/* Watermark */}
-        <p style={{
-          position: 'absolute', top: 20, right: 28, margin: 0, pointerEvents: 'none',
-          fontFamily: "'Scheherazade New', serif", fontSize: 18,
-          color: 'rgba(200,168,75,0.16)', direction: 'rtl',
-        }}>
-          أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ
-        </p>
+        <IslamicPattern opacity={0.07} />
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, transparent, ${gold}, ${goldLight}, ${gold}, transparent)` }} />
 
         <div style={{ position: 'relative' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-            <svg width="10" height="10" viewBox="0 0 20 20">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+            <div style={{ height: 1, width: 18, background: 'rgba(200,168,75,0.5)' }} />
+            <svg width="7" height="7" viewBox="0 0 20 20">
               <polygon points="10,1 12,8 19,8 13,12 15,19 10,15 5,19 7,12 1,8 8,8" fill={gold} />
             </svg>
-            <span style={{ fontSize: 10, color: 'rgba(224,200,112,0.8)', letterSpacing: '0.2em', textTransform: 'uppercase', fontWeight: 600 }}>
-              Compteur de Dhikr
-            </span>
+            <div style={{ height: 1, width: 18, background: 'rgba(200,168,75,0.5)' }} />
           </div>
-          <h1 style={{ margin: '0 0 8px', fontSize: 'clamp(26px,4vw,38px)', fontWeight: 700, color: '#fff', fontFamily: "'Playfair Display', serif" }}>
-            Tasbih
-          </h1>
-          <p style={{ margin: 0, fontSize: 12.5, color: 'rgba(255,255,255,0.5)' }}>
-            « C'est par l'invocation d'Allah que les cœurs trouvent la paix. » — Coran 13:28
-          </p>
+          <div style={{ borderLeft: `3px solid rgba(200,168,75,0.75)`, paddingLeft: 16 }}>
+            <span style={{ fontSize: 10, color: 'rgba(224,200,112,0.8)', letterSpacing: '0.2em', textTransform: 'uppercase', fontWeight: 600, display: 'block', marginBottom: 6 }}>
+              {t('tasbih.subtitle')}
+            </span>
+            <h1 style={{ margin: '0 0 6px', fontSize: 'clamp(22px,4vw,32px)', fontWeight: 700, color: '#fff', fontFamily: "'Cairo', sans-serif", letterSpacing: '-0.01em' }}>
+              {t('tasbih.title')}
+            </h1>
+            <p style={{ margin: 0, fontSize: 12.5, color: 'rgba(255,255,255,0.5)' }}>
+              {t('tasbih.quote')}
+            </p>
+          </div>
         </div>
       </div>
 
@@ -179,7 +178,7 @@ export default function Tasbih() {
           <div style={{ marginBottom: 24 }}>
             <p style={{
               margin: '0 0 4px',
-              fontFamily: "'Scheherazade New', serif",
+              fontFamily: "'Cairo', sans-serif",
               fontSize: 'clamp(28px,6vw,40px)',
               color: flash ? goldLight : (isDark ? goldLight : '#1B3022'),
               direction: 'rtl', lineHeight: 1.5,
@@ -219,7 +218,7 @@ export default function Tasbih() {
             <div style={{ position: 'relative', zIndex: 1, textAlign: 'center' }}>
               <div style={{
                 fontSize: 'clamp(64px,12vw,88px)', fontWeight: 800, lineHeight: 1,
-                fontFamily: "'Playfair Display', serif",
+                fontFamily: "'Cairo', sans-serif",
                 color: flash ? gold : C.textDark,
                 transition: 'color 0.3s',
               }}>
@@ -233,14 +232,14 @@ export default function Tasbih() {
 
           {/* Target selector */}
           <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginBottom: 24 }}>
-            {TARGETS.map(t => (
-              <button key={t} onClick={() => changeTarget(t)} style={{
-                background: target === t && !showCustom ? `linear-gradient(135deg,${gold},#A8882A)` : 'transparent',
-                color: target === t && !showCustom ? '#0D1810' : C.textMid,
-                border: `1px solid ${target === t && !showCustom ? gold : C.border}`,
+            {TARGETS.map(val => (
+              <button key={val} onClick={() => changeTarget(val)} style={{
+                background: target === val && !showCustom ? `linear-gradient(135deg,${gold},#A8882A)` : 'transparent',
+                color: target === val && !showCustom ? '#0D1810' : C.textMid,
+                border: `1px solid ${target === val && !showCustom ? gold : C.border}`,
                 borderRadius: 30, padding: '7px 22px', fontSize: 13, fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s',
               }}>
-                {t}
+                {val}
               </button>
             ))}
             <button onClick={() => setShowCustom(v => !v)} style={{
@@ -249,7 +248,7 @@ export default function Tasbih() {
               border: `1px solid ${showCustom ? gold : C.border}`,
               borderRadius: 30, padding: '7px 22px', fontSize: 13, fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s',
             }}>
-              Autre
+              {t('tasbih.other')}
             </button>
           </div>
 
@@ -264,7 +263,7 @@ export default function Tasbih() {
                   border: `1px solid rgba(200,168,75,0.3)`,
                   background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
                   color: C.textDark, fontSize: 14, width: 100, outline: 'none',
-                  fontFamily: "'Playfair Display', serif", textAlign: 'center',
+                  fontFamily: "'Cairo', sans-serif", textAlign: 'center',
                 }}
               />
               <button onClick={applyCustomTarget} style={{
@@ -286,7 +285,7 @@ export default function Tasbih() {
                 ? `linear-gradient(145deg, ${goldLight}, ${gold})`
                 : `linear-gradient(145deg, ${C.green}, #1B4A30)`,
               border: 'none', borderRadius: 20, color: '#fff',
-              fontSize: 20, fontWeight: 800, fontFamily: "'Scheherazade New', serif",
+              fontSize: 20, fontWeight: 800, fontFamily: "'Cairo', sans-serif",
               cursor: 'pointer', letterSpacing: '0.04em',
               boxShadow: ripple
                 ? `0 0 40px rgba(200,168,75,0.4), 0 8px 28px rgba(0,0,0,0.25)`
@@ -317,7 +316,7 @@ export default function Tasbih() {
             }}
             onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(200,168,75,0.4)'; }}
             onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; }}>
-              Réinitialiser
+              {t('tasbih.reset')}
             </button>
           </div>
         </div>
@@ -328,22 +327,22 @@ export default function Tasbih() {
         <div style={{ ...glass({ padding: '20px 18px', textAlign: 'center' }), position: 'relative', overflow: 'hidden' }}>
           <IslamicPattern opacity={isDark ? 0.03 : 0.025} />
           <div style={{ position: 'relative' }}>
-            <p style={{ margin: '0 0 6px', fontSize: 32, fontWeight: 800, color: gold, fontFamily: "'Playfair Display', serif", lineHeight: 1 }}>
+            <p style={{ margin: '0 0 6px', fontSize: 32, fontWeight: 800, color: gold, fontFamily: "'Cairo', sans-serif", lineHeight: 1 }}>
               {dailyStats.completedCycles}
             </p>
             <p style={{ margin: 0, fontSize: 10.5, color: C.textMid, textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600 }}>
-              Cycles complétés
+              {t('tasbih.cycles')}
             </p>
           </div>
         </div>
         <div style={{ ...glass({ padding: '20px 18px', textAlign: 'center' }), position: 'relative', overflow: 'hidden' }}>
           <IslamicPattern opacity={isDark ? 0.03 : 0.025} />
           <div style={{ position: 'relative' }}>
-            <p style={{ margin: '0 0 6px', fontSize: 32, fontWeight: 800, color: C.green, fontFamily: "'Playfair Display', serif", lineHeight: 1 }}>
+            <p style={{ margin: '0 0 6px', fontSize: 32, fontWeight: 800, color: C.green, fontFamily: "'Cairo', sans-serif", lineHeight: 1 }}>
               {dailyStats.totalTaps}
             </p>
             <p style={{ margin: 0, fontSize: 10.5, color: C.textMid, textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600 }}>
-              Dhikr aujourd'hui
+              {t('tasbih.dhikr_today')}
             </p>
           </div>
         </div>
@@ -362,7 +361,7 @@ export default function Tasbih() {
               <polygon points="10,1 12,8 19,8 13,12 15,19 10,15 5,19 7,12 1,8 8,8" fill={gold} />
             </svg>
             <p style={{ margin: 0, fontSize: 11, fontWeight: 800, color: gold, textTransform: 'uppercase', letterSpacing: '0.12em' }}>
-              Guide du Dhikr après la prière
+              {t('tasbih.guide_title')}
             </p>
           </div>
 
@@ -388,7 +387,7 @@ export default function Tasbih() {
                   {i + 1}
                 </div>
                 <div style={{ flex: 1 }}>
-                  <p style={{ margin: '0 0 2px', fontFamily: "'Scheherazade New', serif", fontSize: 20, color: isDark ? goldLight : '#1B3022', direction: 'rtl', textAlign: 'right' }}>
+                  <p style={{ margin: '0 0 2px', fontFamily: "'Cairo', sans-serif", fontSize: 20, color: isDark ? goldLight : '#1B3022', direction: 'rtl', textAlign: 'right' }}>
                     {item.arabic}
                   </p>
                   <p style={{ margin: '0 0 1px', fontSize: 12, fontWeight: 600, color: C.textDark }}>{item.latin}</p>
@@ -398,7 +397,7 @@ export default function Tasbih() {
                   fontSize: 12, fontWeight: 800, color: gold,
                   background: 'rgba(200,168,75,0.1)', border: '1px solid rgba(200,168,75,0.25)',
                   borderRadius: 20, padding: '3px 12px',
-                  fontFamily: "'Playfair Display', serif",
+                  fontFamily: "'Cairo', sans-serif",
                 }}>
                   ×{item.count}
                 </span>

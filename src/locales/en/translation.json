@@ -75,5 +75,45 @@
   "asma_progress": "AsmaUlHusna Progress",
   "names_learned": "Names Learned",
   "the_most_merciful": "The Most Merciful",
-  "see_full_list": "See Full List"
+  "see_full_list": "See Full List",
+  "horaires": {
+    "title": "Prayer Times",
+    "day": "Day",
+    "error": "Unable to load prayer times. Check your connection."
+  },
+  "horaires_extra": {
+    "locating": "Locating...",
+    "loading_schedule": "Loading schedule...",
+    "retry": "Retry",
+    "today": "Today",
+    "gregorian_date": "Gregorian Date",
+    "hijri_date": "Hijri Date",
+    "my_location": "My Location",
+    "permission_denied": "Access Denied",
+    "today_label": "Today",
+    "in_progress": "In Progress",
+    "next": "Next",
+    "next_prayer_in": "Next prayer in",
+    "hours_mins_secs": "hh : mm : ss",
+    "month_schedule": "Monthly Schedule",
+    "show_less": "Show Less",
+    "show_month": "View Full Month",
+    "footer": "Times calculated using the Muslim World League (MWL) method. Times may vary slightly."
+  },
+  "salat_extra": {
+    "fajr_sub": "DAWN",
+    "dhuhr_sub": "NOON",
+    "asr_sub": "AFTERNOON",
+    "maghrib_sub": "SUNSET",
+    "isha_sub": "NIGHT"
+  },
+  "days": {
+    "monday": "Monday",
+    "tuesday": "Tuesday",
+    "wednesday": "Wednesday",
+    "thursday": "Thursday",
+    "friday": "Friday",
+    "saturday": "Saturday",
+    "sunday": "Sunday"
+  }
 }

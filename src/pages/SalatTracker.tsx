@@ -1,4 +1,5 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+﻿import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '../context/ThemeContext';
 import { lightTheme, darkTheme } from '../theme/colors';
 import { useNavigatePage } from '../context/NavigationContext';
@@ -26,9 +27,7 @@ const PRAYER_ARABIC: Record<PrayerName, string> = {
   Fajr: 'الفجر', Dhuhr: 'الظهر', Asr: 'العصر', Maghrib: 'المغرب', Isha: 'العشاء',
 };
 
-const PRAYER_SUBTITLES: Record<PrayerName, string> = {
-  Fajr: 'Aube', Dhuhr: 'Zénith', Asr: 'Après-midi', Maghrib: 'Coucher', Isha: 'Nuit',
-};
+// Sub-labels resolved at render time via t() in the component
 
 const SUNNAH_PRAYERS: { key: SunnahKey; label: string; arabic: string; total: number }[] = [
   { key: 'Tahajjud', label: 'Tahajjud', arabic: 'التهجد', total: 8 },
@@ -36,14 +35,14 @@ const SUNNAH_PRAYERS: { key: SunnahKey; label: string; arabic: string; total: nu
   { key: 'Witr',     label: 'Witr',     arabic: 'الوتر',  total: 7 },
 ];
 
-const BADGES: { id: string; label: string; desc: string; symbol: string; threshold: number }[] = [
-  { id: 'dawn',      label: 'Lève-tôt',    desc: '7 jours de Fajr',     symbol: '◇', threshold: 7  },
-  { id: 'assidu',    label: 'Assidu',      desc: '10 jours consécutifs', symbol: '◆', threshold: 10 },
-  { id: 'persevere', label: 'Persévérant', desc: '14 jours consécutifs', symbol: '▲', threshold: 14 },
-  { id: 'perfect',   label: 'Parfait',     desc: '30 jours consécutifs', symbol: '★', threshold: 30 },
+const BADGES: { id: string; labelKey: string; descKey: string; symbol: string; threshold: number }[] = [
+  { id: 'dawn',      labelKey: 'salat_extra.badge_dawn_label',      descKey: 'salat_extra.badge_dawn_desc',      symbol: '◇', threshold: 7  },
+  { id: 'assidu',    labelKey: 'salat_extra.badge_assidu_label',    descKey: 'salat_extra.badge_assidu_desc',    symbol: '◆', threshold: 10 },
+  { id: 'persevere', labelKey: 'salat_extra.badge_persevere_label', descKey: 'salat_extra.badge_persevere_desc', symbol: '▲', threshold: 14 },
+  { id: 'perfect',   labelKey: 'salat_extra.badge_perfect_label',  descKey: 'salat_extra.badge_perfect_desc',  symbol: '★', threshold: 30 },
 ];
 
-const DAYS_FR = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
+const DAYS_I18N_SHORT = ['days.sunday', 'days.monday', 'days.tuesday', 'days.wednesday', 'days.thursday', 'days.friday', 'days.saturday'];
 
 const gold = '#C8A84B';
 const goldLight = '#E0C870';
@@ -108,7 +107,7 @@ const IslamicPattern = ({ opacity = 0.06 }: { opacity?: number }) => (
 
 // ─── Progress Ring ────────────────────────────────────────────────────────────
 
-function ProgressRing({ value, total, color, size = 130 }: { value: number; total: number; color: string; size?: number }) {
+function ProgressRing({ value, total, color, size = 130, days = '' }: { value: number; total: number; color: string; size?: number; days?: string }) {
   const r = (size - 16) / 2;
   const circ = 2 * Math.PI * r;
   const pct = total > 0 ? Math.min(value / total, 1) : 0;
@@ -125,8 +124,8 @@ function ProgressRing({ value, total, color, size = 130 }: { value: number; tota
           <stop offset="100%" stopColor={gold} />
         </linearGradient>
       </defs>
-      <text x={size/2} y={size/2-10} textAnchor="middle" fill={gold} fontSize={26} fontWeight={800} fontFamily="'Playfair Display',serif">{value}</text>
-      <text x={size/2} y={size/2+10} textAnchor="middle" fill="rgba(200,168,75,0.6)" fontSize={11}>jours</text>
+      <text x={size/2} y={size/2-10} textAnchor="middle" fill={gold} fontSize={26} fontWeight={800} fontFamily="'Cairo', sans-serif">{value}</text>
+      <text x={size/2} y={size/2+10} textAnchor="middle" fill="rgba(200,168,75,0.6)" fontSize={11}>{days}</text>
     </svg>
   );
 }
@@ -134,10 +133,16 @@ function ProgressRing({ value, total, color, size = 130 }: { value: number; tota
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function SalatTracker() {
+  const { t } = useTranslation();
   const { theme } = useTheme();
   const C = theme === 'light' ? lightTheme : darkTheme;
   const isDark = theme === 'dark';
   const navigate = useNavigatePage();
+
+  const PRAYER_SUBTITLES: Record<PrayerName, string> = {
+    Fajr: t('salat_extra.fajr_sub'), Dhuhr: t('salat_extra.dhuhr_sub'),
+    Asr: t('salat_extra.asr_sub'), Maghrib: t('salat_extra.maghrib_sub'), Isha: t('salat_extra.isha_sub'),
+  };
 
   const [apiTimings, setApiTimings] = useState<Record<string, string> | null>(null);
   const [history, setHistory] = useState<History>(loadHistory);
@@ -185,7 +190,7 @@ export default function SalatTracker() {
     const d = new Date(); d.setDate(d.getDate() - (6 - i));
     const key = dateStr(d);
     const done = PRAYERS.filter(p => history[key]?.[p] === 'done').length;
-    return { label: DAYS_FR[d.getDay()], value: Math.round((done / 5) * 100) };
+    return { label: t(DAYS_I18N_SHORT[d.getDay()]).slice(0, 3), value: Math.round((done / 5) * 100) };
   }), [history]);
 
   const monthlyData = useMemo(() => {
@@ -232,38 +237,35 @@ export default function SalatTracker() {
 
       {/* ── HERO ─────────────────────────────────────────────────────────── */}
       <div style={{
-        borderRadius: 26, overflow: 'hidden', marginBottom: 20, position: 'relative',
-        backgroundImage: `linear-gradient(145deg, rgba(6,15,10,0.95) 0%, rgba(18,48,30,0.88) 50%, rgba(8,20,14,0.80) 100%), url('/photomosquee.png')`,
-        backgroundSize: 'cover', backgroundPosition: 'center 20%', minHeight: 210,
-        display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: '40px 40px 32px',
+        borderRadius: 20, overflow: 'hidden', marginBottom: 20, position: 'relative',
+        backgroundImage: `linear-gradient(145deg, rgba(6,15,10,0.80) 0%, rgba(18,48,30,0.68) 50%, rgba(8,20,14,0.60) 100%), url('/photomosquee.png')`,
+        backgroundSize: 'cover', backgroundPosition: 'center 30%',
+        display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', padding: '30px 36px 26px',
+        border: '1px solid rgba(200,168,75,0.14)',
+        boxShadow: '0 6px 28px rgba(0,0,0,0.22)',
       }}>
-        <IslamicPattern opacity={0.08} />
-        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, transparent, ${gold}, ${goldLight}, ${gold}, transparent)` }} />
-
-        {/* Arabic watermark */}
-        <p style={{
-          position: 'absolute', top: 18, right: 36, margin: 0, pointerEvents: 'none',
-          fontFamily: "'Scheherazade New', serif", fontSize: 22,
-          color: 'rgba(200,168,75,0.15)', direction: 'rtl',
-        }}>
-          أَقِمِ الصَّلَاةَ لِذِكْرِي
-        </p>
+        <IslamicPattern opacity={0.07} />
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, transparent, ${gold}, ${goldLight}, ${gold}, transparent)` }} />
 
         <div style={{ position: 'relative' }}>
-          <h1 style={{
-            margin: '0 0 12px', fontSize: 'clamp(26px,4vw,36px)',
-            fontWeight: 700, color: '#fff', fontFamily: "'Playfair Display', serif",
-          }}>
-            Salat Tracker
-          </h1>
-          <div style={{ borderLeft: `3px solid ${gold}`, paddingLeft: 16, maxWidth: 540 }}>
-            <p style={{ margin: '0 0 4px', fontSize: 11.5, color: `rgba(224,200,112,0.85)`, fontWeight: 600 }}>
-              Le Prophète ﷺ a dit :
-            </p>
-            <p style={{ margin: '0 0 4px', fontSize: 13, color: 'rgba(255,255,255,0.7)', lineHeight: 1.7, fontStyle: 'italic' }}>
-              « Le premier acte dont le serviteur devra rendre compte le Jour du Jugement sera la prière. »
-            </p>
-            <p style={{ margin: 0, fontSize: 10.5, color: 'rgba(255,255,255,0.35)' }}>(Sunan an-Nasa'i 465)</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+            <div style={{ height: 1, width: 18, background: 'rgba(200,168,75,0.5)' }} />
+            <svg width="7" height="7" viewBox="0 0 20 20"><polygon points="10,1 12,8 19,8 13,12 15,19 10,15 5,19 7,12 1,8 8,8" fill="#C8A84B" /></svg>
+            <div style={{ height: 1, width: 18, background: 'rgba(200,168,75,0.5)' }} />
+          </div>
+          <div style={{ borderLeft: `3px solid rgba(200,168,75,0.75)`, paddingLeft: 16 }}>
+            <h1 style={{ margin: '0 0 10px', fontSize: 'clamp(22px,4vw,32px)', fontWeight: 700, color: '#fff', fontFamily: "'Cairo', sans-serif", letterSpacing: '-0.01em' }}>
+              Salat Tracker
+            </h1>
+            <div style={{ borderLeft: `2px solid rgba(200,168,75,0.3)`, paddingLeft: 12, maxWidth: 540 }}>
+              <p style={{ margin: '0 0 3px', fontSize: 11, color: `rgba(224,200,112,0.8)`, fontWeight: 600 }}>
+                {t('salat_extra.prophet_said')}
+              </p>
+              <p style={{ margin: '0 0 3px', fontSize: 12.5, color: 'rgba(255,255,255,0.65)', lineHeight: 1.7, fontStyle: 'italic' }}>
+                {t('salat_extra.hadith_text')}
+              </p>
+              <p style={{ margin: 0, fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>{t('salat_extra.hadith_source')}</p>
+            </div>
           </div>
         </div>
       </div>
@@ -275,18 +277,18 @@ export default function SalatTracker() {
         <div style={glass({ padding: '24px 26px' })}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 16 }}>
             <div>
-              <h2 style={{ margin: '0 0 2px', fontSize: 15, fontWeight: 700, color: C.textDark, fontFamily: "'Playfair Display', serif" }}>
-                Aujourd'hui
+              <h2 style={{ margin: '0 0 2px', fontSize: 15, fontWeight: 700, color: C.textDark, fontFamily: "'Cairo', sans-serif" }}>
+                {t('salat_extra.today_label')}
               </h2>
               <p style={{ margin: 0, fontSize: 11, color: C.textLight }}>
-                {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
+                {new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })}
               </p>
             </div>
             <div style={{ textAlign: 'right' }}>
-              <p style={{ margin: '0 0 2px', fontSize: 22, fontWeight: 800, color: gold, fontFamily: "'Playfair Display', serif", lineHeight: 1 }}>
+              <p style={{ margin: '0 0 2px', fontSize: 22, fontWeight: 800, color: gold, fontFamily: "'Cairo', sans-serif", lineHeight: 1 }}>
                 {completedCount}/5
               </p>
-              <p style={{ margin: 0, fontSize: 10, color: C.textLight }}>accomplies</p>
+              <p style={{ margin: 0, fontSize: 10, color: C.textLight }}>{t('salat_extra.completed_count')}</p>
             </div>
           </div>
 
@@ -322,7 +324,7 @@ export default function SalatTracker() {
                 }}>
                   {/* Arabic name */}
                   <p style={{
-                    margin: 0, width: 52, fontFamily: "'Scheherazade New', serif",
+                    margin: 0, width: 52, fontFamily: "'Cairo', sans-serif",
                     fontSize: 22, color: isCurrent ? gold : C.textDark, lineHeight: 1, textAlign: 'right',
                   }}>
                     {PRAYER_ARABIC[name]}
@@ -331,7 +333,7 @@ export default function SalatTracker() {
                   {/* Latin name */}
                   <div style={{ flex: 1 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <p style={{ margin: 0, fontSize: 13.5, fontWeight: 600, color: C.textDark, fontFamily: "'Playfair Display', serif" }}>
+                      <p style={{ margin: 0, fontSize: 13.5, fontWeight: 600, color: C.textDark, fontFamily: "'Cairo', sans-serif" }}>
                         {name}
                       </p>
                       {isCurrent && (
@@ -339,7 +341,7 @@ export default function SalatTracker() {
                           fontSize: 9, background: gold, color: '#0D1810',
                           padding: '2px 8px', borderRadius: 30, fontWeight: 800, letterSpacing: '0.08em',
                         }}>
-                          EN COURS
+                          {t('salat_extra.in_progress')}
                         </span>
                       )}
                     </div>
@@ -360,7 +362,7 @@ export default function SalatTracker() {
                       minWidth: 90, textAlign: 'center', ...ss,
                     }}
                   >
-                    {displayStatus === 'done' ? 'Accomplie' : displayStatus === 'missed' ? 'Manquée' : 'En attente'}
+                    {displayStatus === 'done' ? t('salat_extra.done') : displayStatus === 'missed' ? t('salat_extra.missed_status') : t('salat_extra.pending')}
                   </button>
                 </div>
               );
@@ -370,7 +372,7 @@ export default function SalatTracker() {
           <p style={{ margin: '14px 0 0', fontSize: 11, color: C.textLight, textAlign: 'right' }}>
             {now.getHours().toString().padStart(2,'0')}:{now.getMinutes().toString().padStart(2,'0')}
             <span onClick={() => navigate('horaires')} style={{ marginLeft: 12, color: gold, cursor: 'pointer', fontWeight: 600 }}>
-              Voir les horaires →
+              {t('salat_extra.see_schedules')}
             </span>
           </p>
         </div>
@@ -380,22 +382,22 @@ export default function SalatTracker() {
           <IslamicPattern opacity={0.05} />
           <div style={{ position: 'relative', width: '100%' }}>
             <p style={{ margin: '0 0 16px', fontSize: 10.5, letterSpacing: '0.14em', textTransform: 'uppercase', color: C.textLight, fontWeight: 700 }}>
-              Ma série active
+              {t('salat_extra.my_streak')}
             </p>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 14 }}>
-              <ProgressRing value={streak} total={Math.max(streak, 30)} color={gold} size={130} />
+              <ProgressRing value={streak} total={Math.max(streak, 30)} color={gold} size={130} days={t('salat_extra.days_label')} />
             </div>
 
             {/* Verse */}
             <p style={{
               margin: '0 0 4px', textAlign: 'center',
-              fontFamily: "'Scheherazade New', serif", fontSize: 16,
+              fontFamily: "'Cairo', sans-serif", fontSize: 16,
               color: isDark ? goldLight : '#1B3022', direction: 'rtl',
             }}>
               وَاسْتَعِينُوا بِالصَّبْرِ وَالصَّلَاةِ
             </p>
             <p style={{ margin: '0 0 16px', fontSize: 10.5, color: C.textMid, textAlign: 'center', fontStyle: 'italic', lineHeight: 1.5 }}>
-              « Cherchez de l'aide dans la patience et la prière. »
+              {t('salat_extra.verse_patience')}
             </p>
 
             <div style={{ width: '100%', height: 1, background: isDark ? 'rgba(200,168,75,0.1)' : 'rgba(200,168,75,0.2)', margin: '0 0 14px' }} />
@@ -407,9 +409,9 @@ export default function SalatTracker() {
               border: `1px solid rgba(200,168,75,0.15)`, borderRadius: 12,
             }}>
               <div>
-                <p style={{ margin: '0 0 2px', fontSize: 9.5, textTransform: 'uppercase', letterSpacing: '0.1em', color: C.textLight, fontWeight: 700 }}>Meilleur record</p>
-                <p style={{ margin: 0, fontSize: 22, fontWeight: 800, color: gold, fontFamily: "'Playfair Display', serif" }}>
-                  {bestStreak} <span style={{ fontSize: 12, fontWeight: 400 }}>jours</span>
+                <p style={{ margin: '0 0 2px', fontSize: 9.5, textTransform: 'uppercase', letterSpacing: '0.1em', color: C.textLight, fontWeight: 700 }}>{t('salat_extra.best_record')}</p>
+                <p style={{ margin: 0, fontSize: 22, fontWeight: 800, color: gold, fontFamily: "'Cairo', sans-serif" }}>
+                  {bestStreak} <span style={{ fontSize: 12, fontWeight: 400 }}>{t('salat_extra.days_label')}</span>
                 </p>
               </div>
               <svg width="28" height="28" viewBox="0 0 20 20">
@@ -426,10 +428,10 @@ export default function SalatTracker() {
         {/* Weekly bar chart */}
         <div style={glass({ padding: '22px 24px' })}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 16 }}>
-            <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: C.textDark, fontFamily: "'Playfair Display', serif" }}>
-              Constance — 7 derniers jours
+            <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: C.textDark, fontFamily: "'Cairo', sans-serif" }}>
+              {t('salat_extra.weekly_title')}
             </h3>
-            <span style={{ fontSize: 10.5, color: C.textLight }}>% de prières</span>
+            <span style={{ fontSize: 10.5, color: C.textLight }}>{t('salat_extra.percent_prayers')}</span>
           </div>
           <Bar
             data={{
@@ -456,11 +458,11 @@ export default function SalatTracker() {
         {/* Monthly heatmap */}
         <div style={glass({ padding: '22px 24px' })}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 14 }}>
-            <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: C.textDark, fontFamily: "'Playfair Display', serif" }}>
-              Aperçu du mois
+            <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: C.textDark, fontFamily: "'Cairo', sans-serif" }}>
+              {t('salat_extra.month_overview')}
             </h3>
             <span style={{ fontSize: 10.5, color: C.textLight }}>
-              {new Date().toLocaleString('fr-FR', { month: 'long', year: 'numeric' })}
+              {new Date().toLocaleString(undefined, { month: 'long', year: 'numeric' })}
             </span>
           </div>
 
@@ -493,10 +495,10 @@ export default function SalatTracker() {
 
           <div style={{ display: 'flex', gap: 12, marginTop: 12, flexWrap: 'wrap' }}>
             {[
-              { color: heatColor(0, false), label: 'Aucune' },
-              { color: heatColor(2, false), label: 'Partielle' },
-              { color: heatColor(4, false), label: 'Bonne' },
-              { color: C.green,              label: 'Complète' },
+              { color: heatColor(0, false), label: t('salat_extra.legend_none') },
+              { color: heatColor(2, false), label: t('salat_extra.legend_partial') },
+              { color: heatColor(4, false), label: t('salat_extra.legend_good') },
+              { color: C.green,              label: t('salat_extra.legend_complete') },
             ].map(({ color, label }) => (
               <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                 <div style={{ width: 10, height: 10, borderRadius: 2, background: color, border: `1px solid rgba(200,168,75,0.1)` }} />
@@ -507,7 +509,7 @@ export default function SalatTracker() {
         </div>
       </div>
 
-      {/* ── SUNNAH + BADGES ──────────────────────────────────────────────── */}
+      {/* ── SUNNAH ──────────────────────────────────────────────── */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
 
         {/* Sunnah */}
@@ -516,8 +518,8 @@ export default function SalatTracker() {
             <svg width="12" height="12" viewBox="0 0 20 20">
               <polygon points="10,1 12,8 19,8 13,12 15,19 10,15 5,19 7,12 1,8 8,8" fill={gold} />
             </svg>
-            <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: C.textDark, fontFamily: "'Playfair Display', serif" }}>
-              Prières Sunnah &amp; Nawafil
+            <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: C.textDark, fontFamily: "'Cairo', sans-serif" }}>
+              {t('salat_extra.sunnah_title')}
             </h3>
           </div>
           {SUNNAH_PRAYERS.map(({ key, label, arabic, total }) => {
@@ -527,11 +529,11 @@ export default function SalatTracker() {
               <div key={key} style={{ marginBottom: 20 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                   <div>
-                    <p style={{ margin: '0 0 1px', fontFamily: "'Scheherazade New', serif", fontSize: 20, color: isDark ? goldLight : '#1B3022', direction: 'rtl' }}>
+                    <p style={{ margin: '0 0 1px', fontFamily: "'Cairo', sans-serif", fontSize: 20, color: isDark ? goldLight : '#1B3022', direction: 'rtl' }}>
                       {arabic}
                     </p>
                     <p style={{ margin: 0, fontSize: 12.5, fontWeight: 600, color: C.textDark }}>{label}</p>
-                    <p style={{ margin: 0, fontSize: 10.5, color: C.textLight }}>{done}/{total} accomplie{done > 1 ? 's' : ''}</p>
+                    <p style={{ margin: 0, fontSize: 10.5, color: C.textLight }}>{done}/{total} {t('salat_extra.completed_plural')}</p>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <span style={{ fontSize: 13, fontWeight: 800, color: gold }}>{pct}%</span>
@@ -559,48 +561,6 @@ export default function SalatTracker() {
           })}
         </div>
 
-        {/* Badges */}
-        <div style={glass({ padding: '22px 24px' })}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 20 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <svg width="12" height="12" viewBox="0 0 20 20">
-                <polygon points="10,1 12,8 19,8 13,12 15,19 10,15 5,19 7,12 1,8 8,8" fill={gold} />
-              </svg>
-              <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: C.textDark, fontFamily: "'Playfair Display', serif" }}>
-                Mes badges
-              </h3>
-            </div>
-            <span style={{ fontSize: 10.5, color: C.textLight }}>
-              {BADGES.filter(b => streak >= b.threshold).length}/{BADGES.length} obtenus
-            </span>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
-            {BADGES.map((badge) => {
-              const earned = streak >= badge.threshold;
-              return (
-                <div key={badge.id} style={{
-                  padding: '18px 14px', borderRadius: 16, textAlign: 'center',
-                  background: earned
-                    ? (isDark ? 'rgba(200,168,75,0.08)' : 'rgba(200,168,75,0.06)')
-                    : (isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)'),
-                  border: `1.5px solid ${earned ? 'rgba(200,168,75,0.35)' : C.border}`,
-                  opacity: earned ? 1 : 0.45,
-                  transition: 'all 0.3s',
-                }}>
-                  <p style={{
-                    margin: '0 0 8px', fontSize: 26, fontFamily: "'Playfair Display', serif",
-                    color: earned ? gold : C.textLight, lineHeight: 1,
-                    filter: earned ? 'none' : 'grayscale(1)',
-                  }}>
-                    {badge.symbol}
-                  </p>
-                  <p style={{ margin: '0 0 3px', fontSize: 12, fontWeight: 700, color: earned ? gold : C.textMid }}>{badge.label}</p>
-                  <p style={{ margin: 0, fontSize: 10, color: C.textLight, lineHeight: 1.4 }}>{badge.desc}</p>
-                </div>
-              );
-            })}
-          </div>
-        </div>
       </div>
     </div>
   );

@@ -75,5 +75,45 @@
   "asma_progress": "Progression AsmaUlHusna",
   "names_learned": "Noms appris",
   "the_most_merciful": "Le Tout Miséricordieux",
-  "see_full_list": "Voir la liste complète"
+  "see_full_list": "Voir la liste complète",
+  "horaires": {
+    "title": "Horaires des prières",
+    "day": "Jour",
+    "error": "Impossible de charger les horaires. Vérifiez votre connexion."
+  },
+  "horaires_extra": {
+    "locating": "Localisation en cours...",
+    "loading_schedule": "Chargement des horaires...",
+    "retry": "Réessayer",
+    "today": "Aujourd'hui",
+    "gregorian_date": "Date grégorienne",
+    "hijri_date": "Date hégirique",
+    "my_location": "Ma position",
+    "permission_denied": "Accès refusé",
+    "today_label": "Aujourd'hui",
+    "in_progress": "En cours",
+    "next": "Suivante",
+    "next_prayer_in": "Prochaine prière dans",
+    "hours_mins_secs": "hh : mm : ss",
+    "month_schedule": "Horaires du mois",
+    "show_less": "Afficher moins",
+    "show_month": "Voir tout le mois",
+    "footer": "Horaires calculés selon la méthode Muslim World League (MWL). Les horaires peuvent varier légèrement."
+  },
+  "salat_extra": {
+    "fajr_sub": "AUBE",
+    "dhuhr_sub": "MIDI",
+    "asr_sub": "APRÈS-MIDI",
+    "maghrib_sub": "COUCHER",
+    "isha_sub": "NUIT"
+  },
+  "days": {
+    "monday": "Lundi",
+    "tuesday": "Mardi",
+    "wednesday": "Mercredi",
+    "thursday": "Jeudi",
+    "friday": "Vendredi",
+    "saturday": "Samedi",
+    "sunday": "Dimanche"
+  }
 }
