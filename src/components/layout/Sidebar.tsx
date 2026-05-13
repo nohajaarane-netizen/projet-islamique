@@ -120,7 +120,6 @@ export function Sidebar({ activePage, onNavigate }: SidebarProps) {
                   padding: '9px 16px',
                   border: 'none',
                   cursor: 'pointer',
-                  textAlign: 'left',
                   background: active ? 'rgba(255,255,255,0.10)' : 'transparent',
                   ...(isRTL
                     ? { borderRight: `3px solid ${active ? C.gold : 'transparent'}`, borderLeft: 'none', textAlign: 'right' as const }

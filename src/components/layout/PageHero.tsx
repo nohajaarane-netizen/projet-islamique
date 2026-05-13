@@ -45,7 +45,7 @@ const PageHero: React.FC<PageHeroProps> = ({
             opacity: 0.04,
             whiteSpace: 'nowrap',
             zIndex: 0,
-            fontFamily: ''Cairo', sans-serif',
+            fontFamily: "'Cairo', sans-serif",
           }}
         >
           {arabicWatermark}

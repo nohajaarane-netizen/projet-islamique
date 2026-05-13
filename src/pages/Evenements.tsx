@@ -337,11 +337,10 @@ export default function Evenements() {
                         color: C.textDark, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                       }}>{ev.title}</span>
                       <span style={{
-                        fontSize: 11, fontWeight: 700, color: catColor, background: `${catColor}18`,
+                        fontSize: isAr ? 13 : 11, fontWeight: 700, color: catColor, background: `${catColor}18`,
                         border: `1px solid ${catColor}44`, borderRadius: 20, padding: '3px 10px',
                         whiteSpace: 'nowrap', textTransform: 'uppercase', letterSpacing: 0.5,
                         fontFamily: "'Cairo', sans-serif",
-                        fontSize: isAr ? 13 : 11,
                       } as CSSProperties}>
                         {getCategoryLabel(ev.category)}
                       </span>
