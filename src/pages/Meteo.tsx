@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../hooks/useLanguage';
 import { lightTheme, darkTheme } from '../theme/colors';
+import PageBanner from '../components/layout/PageBanner';
 import { useNavigatePage } from '../context/NavigationContext';
 import axios from 'axios';
 import { config } from '../config';
@@ -135,14 +136,14 @@ export default function Meteo() {
         async (position) => {
           try {
             const { latitude, longitude } = position.coords;
-            const url = `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&units=metric&lang=fr&appid=${config.OPENWEATHER_API_KEY}`;
+            const url = `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&units=metric&lang=${language}&appid=${config.OPENWEATHER_API_KEY}`;
             const response = await axios.get(url);
             setWeather(response.data); setError('');
           } catch (err) { console.error(err); setError(t('meteo.error')); }
           finally { setLoading(false); }
         },
         () => {
-          axios.get(`https://api.openweathermap.org/data/2.5/weather?q=Berrechid,MA&units=metric&lang=fr&appid=${config.OPENWEATHER_API_KEY}`)
+          axios.get(`https://api.openweathermap.org/data/2.5/weather?q=Berrechid,MA&units=metric&lang=${language}&appid=${config.OPENWEATHER_API_KEY}`)
             .then((res) => { setWeather(res.data); setError(''); })
             .catch(() => setError(t('meteo.geo_denied')))
             .finally(() => setLoading(false));
@@ -150,7 +151,7 @@ export default function Meteo() {
       );
     };
     fetchWeather();
-  }, [t]);
+  }, [t, language]);
 
   if (loading) {
     return (
@@ -163,38 +164,14 @@ export default function Meteo() {
   }
 
   const Hero = () => (
-    <div style={{
-      backgroundImage: `linear-gradient(160deg, rgba(10,26,18,0.82) 0%, rgba(20,50,32,0.70) 55%, rgba(12,32,22,0.82) 100%), url('/photomosquee.png')`,
-      backgroundSize: 'cover', backgroundPosition: 'center 30%',
-      padding: '34px 24px 30px', position: 'relative', overflow: 'hidden',
-      borderBottom: '1px solid rgba(200,168,75,0.2)',
-      boxShadow: '0 4px 24px rgba(0,0,0,0.2)',
-    }}>
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: 'linear-gradient(90deg, transparent, #C8A84B 20%, #E0C870 50%, #C8A84B 80%, transparent)' }} />
-      <IslamicPattern />
-      <div style={{ maxWidth: 820, margin: '0 auto', position: 'relative', zIndex: 1 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 10 }}>
-          <div style={{ height: 1, width: 18, background: 'rgba(200,168,75,0.5)' }} />
-          <svg width="7" height="7" viewBox="0 0 20 20"><polygon points="10,1 12,8 19,8 13,12 15,19 10,15 5,19 7,12 1,8 8,8" fill="#C8A84B" /></svg>
-          <div style={{ height: 1, width: 18, background: 'rgba(200,168,75,0.5)' }} />
-        </div>
-        <div style={{ textAlign: 'center', borderTop: '1px solid rgba(200,168,75,0.12)', borderBottom: '1px solid rgba(200,168,75,0.12)', padding: '12px 0' }}>
-          <h1 style={{ fontFamily: "'Cairo', sans-serif", fontSize: 'clamp(22px,4vw,34px)', fontWeight: 700, color: '#F5F0E2', margin: '0 0 6px', letterSpacing: '-0.01em' }}>
-            {t('meteo.title')}
-          </h1>
-          <p style={{ color: 'rgba(168,196,176,0.85)', fontSize: 13.5, margin: 0 }}>
-            {t('meteo.subtitle')}
-          </p>
-        </div>
-      </div>
-    </div>
+    <PageBanner title={t('meteo.title')} subtitle={t('meteo.subtitle')} />
   );
 
   if (error) {
     return (
-      <div style={{ fontFamily: "'Cairo', sans-serif", minHeight: '100vh', background: C.pageBg, direction: isAr ? 'rtl' : 'ltr' }}>
+      <div style={{ fontFamily: "'Cairo', sans-serif", direction: isAr ? 'rtl' : 'ltr' }}>
         <Hero />
-        <div style={{ maxWidth: 820, margin: '40px auto', padding: '0 20px' }}>
+        <div style={{ padding: '24px 0 40px' }}>
           <div style={{ ...card(), padding: 48, textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
             <SvgWarning color="#c0392b" size={44} />
             <p style={{ color: C.textDark, fontSize: 16, margin: 0 }}>{error}</p>
@@ -223,9 +200,9 @@ export default function Meteo() {
   ];
 
   return (
-    <div style={{ fontFamily: "'Cairo', sans-serif", minHeight: '100vh', background: C.pageBg, direction: isAr ? 'rtl' : 'ltr' }}>
+    <div style={{ fontFamily: "'Cairo', sans-serif", direction: isAr ? 'rtl' : 'ltr' }}>
       <Hero />
-      <div style={{ maxWidth: 820, margin: '0 auto', padding: '32px 20px 60px' }}>
+      <div style={{ padding: '0 0 40px' }}>
 
         {/* ── MAIN CARD ────────────────────────────────────────────────────── */}
         <div style={{ ...card(), padding: '40px 36px', marginBottom: 20 }}>

@@ -61,7 +61,7 @@ function AppContent() {
         />
 
         {/* Sidebar wrapper — sticky on desktop, fixed on mobile */}
-        <div className={`sidebar-wrapper ${sidebarOpen ? 'open' : ''}`}>
+        <div className={`sidebar-wrapper ${sidebarOpen ? 'open collapsed' : ''}`}>
           <Sidebar activePage={activePage} onNavigate={handleNavigate} />
         </div>
 

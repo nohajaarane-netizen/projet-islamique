@@ -22,7 +22,7 @@ import { WiDaySunny, WiCloudy, WiHumidity, WiStrongWind } from 'react-icons/wi';
  * - Événements, hadith du jour, progression AsmaUlHusna
  */
 export default function Accueil() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { theme } = useTheme();
   const C = theme === 'light' ? lightTheme : darkTheme;
   const navigate = useNavigatePage();
@@ -103,28 +103,33 @@ export default function Accueil() {
     feelsLike: number;
     humidity: number;
     wind: number;
+    city: string;
   } | null>(null);
   const [loadingWeather, setLoadingWeather] = useState<boolean>(true);
   const [errorWeather, setErrorWeather] = useState<string>('');
 
-  // --- Récupération des horaires de prière ---
+  // --- Récupération des horaires de prière (position réelle, sinon Berrechid) ---
   useEffect(() => {
-    const fetchPrayerTimes = async () => {
-      try {
-        setLoadingPrayers(true);
-        const response = await axios.get(
-          'https://api.aladhan.com/v1/timingsByCity?city=Berrechid&country=MA&method=4'
-        );
-        setPrayerTimingsAPI(response.data.data.timings);
-        setErrorPrayers('');
-      } catch {
-        console.error('Erreur chargement horaires');
-        setErrorPrayers('Impossible de charger les horaires');
-      } finally {
-        setLoadingPrayers(false);
-      }
-    };
-    fetchPrayerTimes();
+    const handle = (req: Promise<{ data: { data: { timings: Record<string, string> } } }>) =>
+      req
+        .then((r) => { setPrayerTimingsAPI(r.data.data.timings); setErrorPrayers(''); })
+        .catch(() => setErrorPrayers('Impossible de charger les horaires'))
+        .finally(() => setLoadingPrayers(false));
+
+    const byCity = () =>
+      axios.get('https://api.aladhan.com/v1/timingsByCity?city=Berrechid&country=MA&method=4');
+
+    setLoadingPrayers(true);
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => handle(axios.get(
+          `https://api.aladhan.com/v1/timings/${Math.floor(Date.now() / 1000)}?latitude=${pos.coords.latitude}&longitude=${pos.coords.longitude}&method=4`
+        )),
+        () => handle(byCity())
+      );
+    } else {
+      handle(byCity());
+    }
   }, []);
 
   // --- Récupération de la météo réelle (géolocalisation ou ville par défaut) ---
@@ -135,30 +140,40 @@ export default function Accueil() {
         setLoadingWeather(false);
         return;
       }
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          try {
-            const res = await axios.get(
-              `https://api.openweathermap.org/data/2.5/weather?lat=${position.coords.latitude}&lon=${position.coords.longitude}&units=metric&lang=fr&appid=${config.OPENWEATHER_API_KEY}`
-            );
-            setWeatherData({
-              temp: Math.round(res.data.main.temp),
-              condition: res.data.weather[0].description,
-              feelsLike: Math.round(res.data.main.feels_like),
-              humidity: res.data.main.humidity,
-              wind: res.data.wind.speed,
-            });
-          } catch {
-            setErrorWeather('Erreur chargement météo');
-          } finally {
-            setLoadingWeather(false);
-          }
-        },
-        () => {
-          setErrorWeather('Géolocalisation refusée');
-          setLoadingWeather(false);
-        }
-      );
+      const apply = (d: {
+        main: { temp: number; feels_like: number; humidity: number };
+        weather: { description: string }[];
+        wind: { speed: number };
+        name: string;
+        sys?: { country?: string };
+      }) => {
+        setWeatherData({
+          temp: Math.round(d.main.temp),
+          condition: d.weather[0].description,
+          feelsLike: Math.round(d.main.feels_like),
+          humidity: d.main.humidity,
+          wind: Math.round(d.wind.speed * 3.6),
+          city: `${d.name}${d.sys?.country ? ', ' + d.sys.country : ''}`,
+        });
+        setErrorWeather('');
+      };
+
+      const base = 'https://api.openweathermap.org/data/2.5/weather';
+      const byCity = () => axios.get(`${base}?q=Berrechid,MA&units=metric&lang=${i18n.language}&appid=${config.OPENWEATHER_API_KEY}`);
+
+      const run = (req: Promise<{ data: Parameters<typeof apply>[0] }>) =>
+        req.then((res) => apply(res.data)).catch(() => setErrorWeather('Erreur chargement météo')).finally(() => setLoadingWeather(false));
+
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => run(axios.get(
+            `${base}?lat=${position.coords.latitude}&lon=${position.coords.longitude}&units=metric&lang=${i18n.language}&appid=${config.OPENWEATHER_API_KEY}`
+          )),
+          () => run(byCity())
+        );
+      } else {
+        run(byCity());
+      }
     };
     fetchWeather();
   }, []);
@@ -283,7 +298,7 @@ export default function Accueil() {
   };
 
   return (
-    <div style={{ fontFamily: "'Playfair Display', 'Inter', sans-serif", color: C.textDark }}>
+    <div style={{ fontFamily: "'Cairo', sans-serif", color: C.textDark }}>
       {/* 
         SECTION HERO (bannière) 
         - Colonne de gauche : image de fond (mosquée) + texte d'accueil + boutons
@@ -297,72 +312,87 @@ export default function Accueil() {
           display: 'grid',
           gridTemplateColumns: '1fr 210px 190px',
           overflow: 'hidden',
+          position: 'relative',
         }}
       >
+        {/* Ligne dorée supérieure (cohérence avec PageBanner) */}
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, zIndex: 3, background: 'linear-gradient(90deg, transparent, #C8A84B 20%, #E0C870 50%, #C8A84B 80%, transparent)' }} />
+
         <div
           style={{
             backgroundImage:
-              "linear-gradient(rgba(30,58,47,0.7), rgba(42,90,68,0.7)), url('/photomosquee.png')",
+              `linear-gradient(105deg, rgba(10,24,16,0.92) 0%, rgba(20,45,32,0.80) 38%, rgba(27,56,40,0.45) 70%, rgba(27,56,40,0.20) 100%), url('${import.meta.env.BASE_URL}photomosquee.png')`,
             backgroundSize: 'cover',
             backgroundPosition: 'center 30%',
-            padding: '30px 26px',
-            minHeight: '185px',
+            padding: '32px 30px',
+            minHeight: '205px',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'flex-end',
+            position: 'relative',
+            transform: 'scaleX(-1)',
+            overflow: 'hidden',
           }}
         >
-          <p style={{ margin: '0 0 5px', fontSize: '13px', color: 'rgba(232,204,100,0.9)' }}>{t('welcome')}</p>
-          <h1 style={{ margin: '0 0 9px', fontSize: '28px', fontWeight: 700, color: '#FFFFFF', lineHeight: 1.2 }}>
+          {/* Contenu remis à l'endroit — l'image de fond est inversée en miroir (mosquée à gauche) */}
+          <div style={{ transform: 'scaleX(-1)', display: 'flex', flexDirection: 'column', width: '100%' }}>
+          <p style={{ margin: '0 0 6px', fontSize: '12px', fontWeight: 600, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(232,204,100,0.92)' }}>{t('welcome')}</p>
+          <h1 style={{ margin: '0 0 10px', fontSize: '30px', fontWeight: 800, color: '#FFFFFF', lineHeight: 1.18, letterSpacing: '-0.01em', textShadow: '0 2px 12px rgba(0,0,0,0.35)' }}>
             {t('hero_title')}
           </h1>
           <p
             style={{
-              margin: '0 0 20px',
-              fontSize: '12px',
-              color: 'rgba(255,255,255,0.6)',
-              lineHeight: 1.65,
-              maxWidth: '300px',
+              margin: '0 0 22px',
+              fontSize: '12.5px',
+              color: 'rgba(255,255,255,0.72)',
+              lineHeight: 1.7,
+              maxWidth: '320px',
             }}
           >
             {t('hero_desc')}
           </p>
-          <div style={{ display: 'flex', gap: '10px' }}>
+          <div style={{ display: 'flex', gap: '11px' }}>
             <button
               onClick={() => navigate('salat')}
               style={{
-                padding: '8px 16px',
-                background: C.green,
+                display: 'flex', alignItems: 'center', gap: 7,
+                padding: '10px 20px',
+                background: 'linear-gradient(135deg, #C8A84B 0%, #E0C870 100%)',
                 border: 'none',
-                borderRadius: '7px',
-                color: 'white',
-                fontWeight: 600,
-                fontSize: '12.5px',
+                borderRadius: '10px',
+                color: '#1a1a0a',
+                fontWeight: 700,
+                fontSize: '13px',
                 cursor: 'pointer',
-                transition: 'opacity 0.2s',
+                boxShadow: '0 4px 14px rgba(200,168,75,0.35)',
+                transition: 'transform 0.2s, box-shadow 0.2s',
               }}
-              onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
-              onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
+              onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 18px rgba(200,168,75,0.45)'; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 14px rgba(200,168,75,0.35)'; }}
             >
               {t('btn_start')}
             </button>
             <button
               onClick={() => navigate('horaires')}
               style={{
-                padding: '8px 16px',
-                background: 'rgba(255,255,255,0.11)',
-                border: '1px solid rgba(255,255,255,0.18)',
-                borderRadius: '7px',
+                padding: '10px 20px',
+                background: 'rgba(255,255,255,0.12)',
+                border: '1px solid rgba(255,255,255,0.25)',
+                borderRadius: '10px',
                 color: 'white',
-                fontSize: '12.5px',
+                fontWeight: 600,
+                fontSize: '13px',
                 cursor: 'pointer',
+                backdropFilter: 'blur(6px)',
+                WebkitBackdropFilter: 'blur(6px)',
                 transition: 'background 0.2s',
               }}
-              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.2)')}
-              onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.11)')}
+              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.22)')}
+              onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.12)')}
             >
               {t('btn_explore')}
             </button>
+          </div>
           </div>
         </div>
 
@@ -497,15 +527,15 @@ export default function Accueil() {
         ))}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '16px' }}>
-        <div style={cardStyle({ padding: '18px' })}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '16px', alignItems: 'stretch' }}>
+        <div style={cardStyle({ padding: '18px', display: 'flex', flexDirection: 'column' })}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
             <h2 style={{ margin: 0, fontSize: '14.5px', fontWeight: 600, color: C.textDark }}>{t('spiritual_tools')}</h2>
             <button onClick={() => navigate('salat')} style={{ background: 'none', border: 'none', color: C.green, fontSize: '12px', cursor: 'pointer', fontWeight: 500 }}>
               {t('see_all')} ›
             </button>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gridAutoRows: '1fr', gap: '10px', flex: 1 }}>
             {spiritualTools.map((tool) => (
               <div
                 key={tool.id}
@@ -546,7 +576,7 @@ export default function Accueil() {
           </div>
         </div>
 
-        <div style={cardStyle({ padding: '18px' })}>
+        <div style={cardStyle({ padding: '18px', display: 'flex', flexDirection: 'column' })}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3px' }}>
             <h2 style={{ margin: 0, fontSize: '14.5px', fontWeight: 600, color: C.textDark }}>{t('prayer_times')}</h2>
             <button onClick={() => navigate('horaires')} style={{ background: 'none', border: 'none', color: C.green, fontSize: '11.5px', cursor: 'pointer', fontWeight: 500 }}>
@@ -554,7 +584,7 @@ export default function Accueil() {
             </button>
           </div>
           <p style={{ margin: '0 0 12px', fontSize: '11px', color: C.textMid }}>
-            <FaMapMarkerAlt style={{ fontSize: '10px', marginRight: '4px' }} /> {t('berrechid')}
+            <FaMapMarkerAlt style={{ fontSize: '10px', marginRight: '4px' }} /> {weatherData?.city || t('berrechid')}
           </p>
 
           {loadingPrayers ? (
@@ -628,7 +658,7 @@ export default function Accueil() {
                   );
                 })}
               </div>
-              <div style={{ background: C.cardBg2, borderRadius: '9px', padding: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ background: C.cardBg2, borderRadius: '9px', padding: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto' }}>
                 <div>
                   <p style={{ margin: '0 0 1px', fontSize: '10.5px', color: C.textMid }}>{t('next_prayer')}</p>
                   <p style={{ margin: '0 0 3px', fontSize: '17px', fontWeight: 700, color: C.textDark }}>
@@ -716,7 +746,7 @@ export default function Accueil() {
           onMouseLeave={e => ((e.currentTarget as HTMLElement).style.transform = '')}>
           <h3 style={{ margin: '0 0 1px', fontSize: '13.5px', fontWeight: 600, color: C.textDark }}>{t('weather')}</h3>
           <p style={{ margin: '0 0 12px', fontSize: '10.5px', color: C.textMid }}>
-            <FaMapMarkerAlt style={{ fontSize: '10px', marginRight: '4px' }} /> {t('berrechid')}
+            <FaMapMarkerAlt style={{ fontSize: '10px', marginRight: '4px' }} /> {weatherData?.city || t('berrechid')}
           </p>
           {loadingWeather ? (
             <div style={{ textAlign: 'center', padding: '20px' }}>
@@ -748,18 +778,18 @@ export default function Accueil() {
                 </div>
               </div>
               {[
-                [t('feels_like'), `${weatherData.feelsLike}°C`, <WiHumidity key="fl" />],
+                [t('feels_like'), `${weatherData.feelsLike}°C`, <WiDaySunny key="fl" />],
                 [t('humidity'), `${weatherData.humidity}%`, <WiHumidity key="hum" />],
                 [t('wind'), `${weatherData.wind} km/h`, <WiStrongWind key="win" />],
-              ].map(([label, value, icon]) => (
+              ].map(([label, value, icon], i, arr) => (
                 <div
                   key={label as string}
                   style={{
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
-                    padding: '4px 0',
-                    borderBottom: `1px solid ${C.border}`,
+                    padding: '6px 0',
+                    borderBottom: i < arr.length - 1 ? `1px solid ${C.border}` : 'none',
                   }}
                 >
                   <span style={{ fontSize: '11px', color: C.textMid, display: 'flex', alignItems: 'center', gap: '4px' }}>

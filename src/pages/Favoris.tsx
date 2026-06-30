@@ -4,6 +4,7 @@ import { FaTimes } from 'react-icons/fa';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../hooks/useLanguage';
 import { lightTheme, darkTheme } from '../theme/colors';
+import PageBanner from '../components/layout/PageBanner';
 
 interface Favorite { id: number; text: string; date: string; category: FavCategory; }
 type FavCategory = 'Dhikr' | 'Dua' | 'Verset' | 'Hadith' | 'Autre';
@@ -95,53 +96,30 @@ export default function Favoris() {
   const filterLabel = (cat: FavCategory | 'Tous') => cat === 'Tous' ? t('favoris_extra.filter_all') : getCatLabel(cat as FavCategory);
 
   return (
-    <div style={{ fontFamily: "'Cairo', sans-serif", minHeight: '100vh', background: C.pageBg, direction: isAr ? 'rtl' : 'ltr' }}>
+    <div style={{ fontFamily: "'Cairo', sans-serif", direction: isAr ? 'rtl' : 'ltr' }}>
 
       {/* ── HERO ─────────────────────────────────────────────────────────────── */}
-      <div style={{
-        backgroundImage: `linear-gradient(160deg, rgba(10,26,18,0.82) 0%, rgba(20,50,32,0.70) 55%, rgba(12,32,22,0.82) 100%), url('/photomosquee.png')`,
-        backgroundSize: 'cover', backgroundPosition: 'center 30%',
-        padding: '34px 24px 30px', position: 'relative', overflow: 'hidden',
-        borderBottom: '1px solid rgba(200,168,75,0.2)',
-        boxShadow: '0 4px 24px rgba(0,0,0,0.2)',
-      }}>
-        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: 'linear-gradient(90deg, transparent, #C8A84B 20%, #E0C870 50%, #C8A84B 80%, transparent)' }} />
-        <IslamicPattern />
-        <div style={{ maxWidth: 820, margin: '0 auto', position: 'relative', zIndex: 1 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 20 }}>
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                <div style={{ height: 1, width: 18, background: 'rgba(200,168,75,0.5)' }} />
-                <svg width="7" height="7" viewBox="0 0 20 20"><polygon points="10,1 12,8 19,8 13,12 15,19 10,15 5,19 7,12 1,8 8,8" fill="#C8A84B" /></svg>
-                <div style={{ height: 1, width: 18, background: 'rgba(200,168,75,0.5)' }} />
-              </div>
-              <div style={{ borderLeft: '3px solid rgba(200,168,75,0.75)', paddingLeft: 16 }}>
-                <h1 style={{ fontFamily: "'Cairo', sans-serif", fontSize: 'clamp(22px,4vw,34px)', fontWeight: 700, color: '#F5F0E2', margin: '0 0 7px', letterSpacing: '-0.01em' }}>
-                  {t('favoris.title')}
-                </h1>
-                <p style={{ color: 'rgba(168,196,176,0.85)', fontSize: 13.5, margin: 0 }}>
-                  {t('favoris_extra.hero_subtitle')}
-                </p>
-              </div>
-            </div>
-            <button onClick={() => setShowForm((v) => !v)}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 10,
-                background: showForm ? 'rgba(255,255,255,0.08)' : 'linear-gradient(135deg, #C8A84B 0%, #E0C870 100%)',
-                backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
-                border: showForm ? '1px solid rgba(200,168,75,0.4)' : 'none',
-                borderRadius: 14, padding: '13px 26px',
-                color: showForm ? '#E0C870' : '#1a1a0a',
-                fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: "'Cairo', sans-serif", flexShrink: 0, transition: 'all 0.3s',
-              }}>
-              <span style={{ fontSize: 20, lineHeight: 1, fontWeight: 300 }}>{showForm ? '×' : '+'}</span>
-              {showForm ? t('favoris_extra.close_btn') : t('favoris_extra.add_btn')}
-            </button>
-          </div>
-        </div>
-      </div>
+      <PageBanner
+        title={t('favoris.title')}
+        subtitle={t('favoris_extra.hero_subtitle')}
+        badge={
+          <button onClick={() => setShowForm((v) => !v)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              background: showForm ? 'rgba(255,255,255,0.10)' : 'linear-gradient(135deg, #C8A84B 0%, #E0C870 100%)',
+              backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
+              border: showForm ? '1px solid rgba(200,168,75,0.4)' : 'none',
+              borderRadius: 12, padding: '9px 18px',
+              color: showForm ? '#E0C870' : '#1a1a0a',
+              fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: "'Cairo', sans-serif", flexShrink: 0, transition: 'all 0.3s',
+            }}>
+            <span style={{ fontSize: 18, lineHeight: 1, fontWeight: 300 }}>{showForm ? '×' : '+'}</span>
+            {showForm ? t('favoris_extra.close_btn') : t('favoris_extra.add_btn')}
+          </button>
+        }
+      />
 
-      <div style={{ maxWidth: 820, margin: '0 auto', padding: '28px 20px 60px' }}>
+      <div style={{ padding: '0 0 40px' }}>
 
         {/* ── ADD FORM ─────────────────────────────────────────────────────── */}
         {showForm && (

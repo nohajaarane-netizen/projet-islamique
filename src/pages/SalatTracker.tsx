@@ -2,6 +2,7 @@
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../context/ThemeContext';
 import { lightTheme, darkTheme } from '../theme/colors';
+import PageBanner from '../components/layout/PageBanner';
 import { useNavigatePage } from '../context/NavigationContext';
 import { Bar } from 'react-chartjs-2';
 import axios from 'axios';
@@ -10,6 +11,7 @@ import {
 } from 'chart.js';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip);
+ChartJS.defaults.font.family = "'Cairo', sans-serif";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -233,43 +235,16 @@ export default function SalatTracker() {
   };
 
   return (
-    <div style={{ maxWidth: 980, margin: '0 auto', paddingBottom: 48 }}>
+    <div style={{ paddingBottom: 48, fontFamily: "'Cairo', sans-serif" }}>
 
       {/* ── HERO ─────────────────────────────────────────────────────────── */}
-      <div style={{
-        borderRadius: 20, overflow: 'hidden', marginBottom: 20, position: 'relative',
-        backgroundImage: `linear-gradient(145deg, rgba(6,15,10,0.80) 0%, rgba(18,48,30,0.68) 50%, rgba(8,20,14,0.60) 100%), url('/photomosquee.png')`,
-        backgroundSize: 'cover', backgroundPosition: 'center 30%',
-        display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', padding: '30px 36px 26px',
-        border: '1px solid rgba(200,168,75,0.14)',
-        boxShadow: '0 6px 28px rgba(0,0,0,0.22)',
-      }}>
-        <IslamicPattern opacity={0.07} />
-        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, transparent, ${gold}, ${goldLight}, ${gold}, transparent)` }} />
+      <PageBanner
+        eyebrow={t('salat_extra.prophet_said')}
+        title="Salat Tracker"
+        subtitle={t('salat_extra.hadith_text')}
+      />
 
-        <div style={{ position: 'relative' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-            <div style={{ height: 1, width: 18, background: 'rgba(200,168,75,0.5)' }} />
-            <svg width="7" height="7" viewBox="0 0 20 20"><polygon points="10,1 12,8 19,8 13,12 15,19 10,15 5,19 7,12 1,8 8,8" fill="#C8A84B" /></svg>
-            <div style={{ height: 1, width: 18, background: 'rgba(200,168,75,0.5)' }} />
-          </div>
-          <div style={{ borderLeft: `3px solid rgba(200,168,75,0.75)`, paddingLeft: 16 }}>
-            <h1 style={{ margin: '0 0 10px', fontSize: 'clamp(22px,4vw,32px)', fontWeight: 700, color: '#fff', fontFamily: "'Cairo', sans-serif", letterSpacing: '-0.01em' }}>
-              Salat Tracker
-            </h1>
-            <div style={{ borderLeft: `2px solid rgba(200,168,75,0.3)`, paddingLeft: 12, maxWidth: 540 }}>
-              <p style={{ margin: '0 0 3px', fontSize: 11, color: `rgba(224,200,112,0.8)`, fontWeight: 600 }}>
-                {t('salat_extra.prophet_said')}
-              </p>
-              <p style={{ margin: '0 0 3px', fontSize: 12.5, color: 'rgba(255,255,255,0.65)', lineHeight: 1.7, fontStyle: 'italic' }}>
-                {t('salat_extra.hadith_text')}
-              </p>
-              <p style={{ margin: 0, fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>{t('salat_extra.hadith_source')}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
+      <div>
       {/* ── TODAY + STREAK ───────────────────────────────────────────────── */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 290px', gap: 16, marginBottom: 16 }}>
 
@@ -433,26 +408,28 @@ export default function SalatTracker() {
             </h3>
             <span style={{ fontSize: 10.5, color: C.textLight }}>{t('salat_extra.percent_prayers')}</span>
           </div>
-          <Bar
-            data={{
-              labels: weeklyData.map(d => d.label),
-              datasets: [{
-                data: weeklyData.map(d => d.value),
-                backgroundColor: weeklyData.map(d =>
-                  d.value === 100 ? gold : d.value >= 60 ? C.green : (isDark ? 'rgba(200,168,75,0.15)' : 'rgba(200,168,75,0.2)')
-                ),
-                borderRadius: 8, borderSkipped: false,
-              }],
-            }}
-            options={{
-              responsive: true,
-              plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => `${ctx.raw}%` } } },
-              scales: {
-                y: { min: 0, max: 100, ticks: { callback: (v) => `${v}%`, color: C.textLight, font: { size: 10 } }, grid: { color: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.05)' } },
-                x: { ticks: { color: C.textMid, font: { size: 11 } }, grid: { display: false } },
-              },
-            }}
-          />
+          <div style={{ maxWidth: 460, margin: '0 auto' }}>
+            <Bar
+              data={{
+                labels: weeklyData.map(d => d.label),
+                datasets: [{
+                  data: weeklyData.map(d => d.value),
+                  backgroundColor: weeklyData.map(d =>
+                    d.value === 100 ? gold : d.value >= 60 ? C.green : (isDark ? 'rgba(200,168,75,0.15)' : 'rgba(200,168,75,0.2)')
+                  ),
+                  borderRadius: 8, borderSkipped: false,
+                }],
+              }}
+              options={{
+                responsive: true,
+                plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => `${ctx.raw}%` } } },
+                scales: {
+                  y: { min: 0, max: 100, ticks: { callback: (v) => `${v}%`, color: C.textLight, font: { family: "'Cairo', sans-serif", size: 10 } }, grid: { color: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.05)' } },
+                  x: { ticks: { color: C.textMid, font: { family: "'Cairo', sans-serif", size: 11 } }, grid: { display: false } },
+                },
+              }}
+            />
+          </div>
         </div>
 
         {/* Monthly heatmap */}
@@ -510,57 +487,57 @@ export default function SalatTracker() {
       </div>
 
       {/* ── SUNNAH ──────────────────────────────────────────────── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+      <div style={glass({ padding: '22px 24px', fontFamily: "'Cairo', sans-serif" })}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 18 }}>
+          <svg width="12" height="12" viewBox="0 0 20 20">
+            <polygon points="10,1 12,8 19,8 13,12 15,19 10,15 5,19 7,12 1,8 8,8" fill={gold} />
+          </svg>
+          <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: C.textDark, fontFamily: "'Cairo', sans-serif" }}>
+            {t('salat_extra.sunnah_title')}
+          </h3>
+        </div>
 
-        {/* Sunnah */}
-        <div style={glass({ padding: '22px 24px' })}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
-            <svg width="12" height="12" viewBox="0 0 20 20">
-              <polygon points="10,1 12,8 19,8 13,12 15,19 10,15 5,19 7,12 1,8 8,8" fill={gold} />
-            </svg>
-            <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: C.textDark, fontFamily: "'Cairo', sans-serif" }}>
-              {t('salat_extra.sunnah_title')}
-            </h3>
-          </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14 }}>
           {SUNNAH_PRAYERS.map(({ key, label, arabic, total }) => {
             const done = sunnahDone[key];
             const pct = Math.round((done / total) * 100);
             return (
-              <div key={key} style={{ marginBottom: 20 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                  <div>
-                    <p style={{ margin: '0 0 1px', fontFamily: "'Cairo', sans-serif", fontSize: 20, color: isDark ? goldLight : '#1B3022', direction: 'rtl' }}>
-                      {arabic}
-                    </p>
-                    <p style={{ margin: 0, fontSize: 12.5, fontWeight: 600, color: C.textDark }}>{label}</p>
-                    <p style={{ margin: 0, fontSize: 10.5, color: C.textLight }}>{done}/{total} {t('salat_extra.completed_plural')}</p>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ fontSize: 13, fontWeight: 800, color: gold }}>{pct}%</span>
-                    <div style={{ display: 'flex', gap: 4 }}>
-                      <button
-                        onClick={() => setSunnahDone(p => ({ ...p, [key]: Math.max(0, p[key] - 1) }))}
-                        disabled={done === 0}
-                        style={{ width: 26, height: 26, borderRadius: '50%', border: `1px solid ${C.border}`, background: 'transparent', cursor: done === 0 ? 'not-allowed' : 'pointer', color: C.textMid, fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: done === 0 ? 0.4 : 1 }}>
-                        −
-                      </button>
-                      <button
-                        onClick={() => setSunnahDone(p => ({ ...p, [key]: Math.min(total, p[key] + 1) }))}
-                        disabled={done === total}
-                        style={{ width: 26, height: 26, borderRadius: '50%', border: 'none', background: `linear-gradient(135deg, ${gold}, #A8882A)`, cursor: done === total ? 'not-allowed' : 'pointer', color: '#0D1810', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: done === total ? 0.5 : 1, fontWeight: 700 }}>
-                        +
-                      </button>
-                    </div>
-                  </div>
+              <div key={key} style={{
+                background: isDark ? 'rgba(255,255,255,0.02)' : '#faf8f3',
+                border: `1px solid ${C.border}`, borderRadius: 16,
+                padding: '20px 18px', textAlign: 'center',
+                fontFamily: "'Cairo', sans-serif",
+              }}>
+                <p style={{ margin: '0 0 2px', fontFamily: "'Cairo', sans-serif", fontSize: 22, color: isDark ? goldLight : '#1B3022', direction: 'rtl' }}>
+                  {arabic}
+                </p>
+                <p style={{ margin: '0 0 2px', fontSize: 12.5, fontWeight: 600, color: C.textDark, fontFamily: "'Cairo', sans-serif" }}>{label}</p>
+                <p style={{ margin: '0 0 14px', fontSize: 10.5, color: C.textLight, fontFamily: "'Cairo', sans-serif" }}>{done}/{total} {t('salat_extra.completed_plural')}</p>
+
+                <div style={{ height: 5, background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)', borderRadius: 3, overflow: 'hidden', marginBottom: 8 }}>
+                  <div style={{ width: `${pct}%`, height: '100%', background: `linear-gradient(90deg, ${gold}, ${C.green})`, borderRadius: 3, transition: 'width 0.4s ease' }} />
                 </div>
-                <div style={{ height: 3, background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)', borderRadius: 2 }}>
-                  <div style={{ width: `${pct}%`, height: '100%', background: `linear-gradient(90deg, ${gold}, ${C.green})`, borderRadius: 2, transition: 'width 0.4s ease' }} />
+                <p style={{ margin: '0 0 14px', fontSize: 14, fontWeight: 800, color: gold, fontFamily: "'Cairo', sans-serif" }}>{pct}%</p>
+
+                <div style={{ display: 'flex', justifyContent: 'center', gap: 10 }}>
+                  <button
+                    onClick={() => setSunnahDone(p => ({ ...p, [key]: Math.max(0, p[key] - 1) }))}
+                    disabled={done === 0}
+                    style={{ width: 30, height: 30, borderRadius: '50%', border: `1px solid ${C.border}`, background: 'transparent', cursor: done === 0 ? 'not-allowed' : 'pointer', color: C.textMid, fontSize: 17, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: done === 0 ? 0.4 : 1 }}>
+                    −
+                  </button>
+                  <button
+                    onClick={() => setSunnahDone(p => ({ ...p, [key]: Math.min(total, p[key] + 1) }))}
+                    disabled={done === total}
+                    style={{ width: 30, height: 30, borderRadius: '50%', border: 'none', background: `linear-gradient(135deg, ${gold}, #A8882A)`, cursor: done === total ? 'not-allowed' : 'pointer', color: '#0D1810', fontSize: 17, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: done === total ? 0.5 : 1, fontWeight: 700 }}>
+                    +
+                  </button>
                 </div>
               </div>
             );
           })}
         </div>
-
+      </div>
       </div>
     </div>
   );

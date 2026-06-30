@@ -2,6 +2,7 @@
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../context/ThemeContext';
 import { lightTheme, darkTheme } from '../theme/colors';
+import PageBanner from '../components/layout/PageBanner';
 import { useLanguage } from '../hooks/useLanguage';
 import { allNames, AsmaName } from '../data/asmaNamesFull';
 import { FaHeart, FaSearch, FaCheck } from 'react-icons/fa';
@@ -420,109 +421,18 @@ export default function AsmaUlHusna() {
   // ─────────────────────────────────────────────────────────────────────────
 
   return (
-    <div style={{ maxWidth: 1040, margin: '0 auto', paddingBottom: 48, color: C.textDark }}>
+    <div style={{ paddingBottom: 48, color: C.textDark }}>
       {modal}
 
       {/* ── HERO ─────────────────────────────────────────────────────────── */}
-      <div style={{
-        position: 'relative', overflow: 'hidden',
-        borderRadius: 20, marginBottom: 20,
-        backgroundImage: `linear-gradient(145deg, rgba(10,26,14,0.82) 0%, rgba(22,40,24,0.70) 40%, rgba(27,56,40,0.62) 80%, rgba(14,30,20,0.72) 100%), url('/photomosquee.png')`,
-        backgroundSize: 'cover', backgroundPosition: 'center 30%',
-        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start',
-        padding: '28px 36px 24px',
-        textAlign: 'center',
-        border: '1px solid rgba(200,168,75,0.14)',
-        boxShadow: '0 6px 28px rgba(0,0,0,0.22)',
-      }}>
-        {/* Islamic geometric pattern */}
-        <IslamicPattern opacity={0.07} color="#C8A84B" />
+      <PageBanner
+        marginBottom={20}
+        eyebrow={heroBadge}
+        title={heroTitle}
+        subtitle={t('asma_extra.verse_quote')}
+      />
 
-        {/* Gold top line */}
-        <div style={{
-          position: 'absolute', top: 0, left: 0, right: 0, height: 2,
-          background: `linear-gradient(90deg, transparent 0%, ${gold} 30%, ${goldLight} 50%, ${gold} 70%, transparent 100%)`,
-        }} />
-
-        {/* Ornament */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-          <div style={{ height: 1, width: 18, background: 'rgba(200,168,75,0.5)' }} />
-          <svg width="7" height="7" viewBox="0 0 20 20"><polygon points="10,1 12,8 19,8 13,12 15,19 10,15 5,19 7,12 1,8 8,8" fill="#C8A84B" /></svg>
-          <div style={{ height: 1, width: 18, background: 'rgba(200,168,75,0.5)' }} />
-        </div>
-
-        {/* Allah icon + 99 badge — compact row */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 14 }}>
-          <div style={{
-            width: 56, height: 56,
-            borderRadius: '50%',
-            background: `radial-gradient(circle at 40% 35%, rgba(240,210,100,0.18), rgba(200,168,75,0.06))`,
-            border: `1px solid rgba(200,168,75,0.35)`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: `0 0 18px rgba(200,168,75,0.15)`,
-            animation: 'pulse-glow 3s ease-in-out infinite',
-          }}>
-            <span style={{ fontFamily: "'Cairo', sans-serif", fontSize: 26, color: goldLight, lineHeight: 1 }}>
-              الله
-            </span>
-          </div>
-          <div style={{ textAlign: 'left' }}>
-            <span style={{
-              display: 'inline-flex', alignItems: 'center', gap: 6,
-              background: 'rgba(200,168,75,0.12)', border: '1px solid rgba(200,168,75,0.3)',
-              borderRadius: 30, padding: '3px 12px',
-              fontSize: 10, fontWeight: 700, color: gold, letterSpacing: '0.12em', textTransform: 'uppercase',
-            }}>
-              {heroBadge}
-            </span>
-          </div>
-        </div>
-
-        {/* Arabic title */}
-        <p style={{
-          margin: '0 0 4px',
-          fontSize: 'clamp(22px, 4vw, 36px)',
-          fontFamily: "'Cairo', sans-serif",
-          color: goldLight, lineHeight: 1.4,
-          direction: 'rtl', letterSpacing: '0.01em',
-        }}>
-          أَسْمَاءُ اللَّهِ الْحُسْنَى
-        </p>
-
-        {/* Latin title */}
-        <h1 style={{
-          margin: '0 0 4px', fontSize: 'clamp(16px, 3vw, 24px)',
-          fontFamily: "'Cairo', sans-serif", fontWeight: 700,
-          color: '#FFFFFF', letterSpacing: '-0.01em',
-        }}>
-          {heroTitle}
-        </h1>
-
-        <p style={{ margin: '0 0 16px', fontSize: 12.5, color: 'rgba(255,255,255,0.45)' }}>
-          {t('asma_extra.verse_quote')}
-        </p>
-
-        {/* Progress bar inline */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14, maxWidth: 360 }}>
-          <ProgressRing value={learned.length} total={99} size={58} />
-          <div style={{ flex: 1, textAlign: 'left' }}>
-            <p style={{ margin: '0 0 6px', fontSize: 11, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-              {progressLbl}
-            </p>
-            <div style={{ background: 'rgba(255,255,255,0.08)', borderRadius: 10, height: 6, overflow: 'hidden' }}>
-              <div style={{
-                height: '100%', borderRadius: 10,
-                background: `linear-gradient(90deg, ${gold}, ${goldLight})`,
-                width: `${(learned.length / 99) * 100}%`,
-                transition: 'width 0.8s ease',
-              }} />
-            </div>
-            <p style={{ margin: '5px 0 0', fontSize: 11.5, color: 'rgba(255,255,255,0.5)' }}>
-              {learned.length} / 99 — {Math.round((learned.length / 99) * 100)}%
-            </p>
-          </div>
-        </div>
-      </div>
+      <div>
 
       {/* ── STATS ROW ────────────────────────────────────────────────────── */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 20 }}>
@@ -888,6 +798,7 @@ export default function AsmaUlHusna() {
           .asma-grid { grid-template-columns: repeat(2, 1fr) !important; }
         }
       `}</style>
+      </div>
     </div>
   );
 }

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../hooks/useLanguage';
 import { lightTheme, darkTheme } from '../theme/colors';
+import PageBanner from '../components/layout/PageBanner';
 
 const KAABA = { lat: 21.3891, lon: 39.8579 };
 
@@ -187,36 +188,15 @@ export default function Qibla() {
   const qibla = geo?.qibla ?? 245;
 
   return (
-    <div style={{ fontFamily: "'Cairo', sans-serif", minHeight: '100vh', background: C.pageBg, direction: isAr ? 'rtl' : 'ltr' }}>
+    <div style={{ fontFamily: "'Cairo', sans-serif", direction: isAr ? 'rtl' : 'ltr' }}>
 
       {/* ── HERO ─────────────────────────────────────────────────────────────── */}
-      <div style={{
-        backgroundImage: `linear-gradient(160deg, rgba(10,26,18,0.82) 0%, rgba(20,50,32,0.70) 55%, rgba(12,32,22,0.82) 100%), url('/photomosquee.png')`,
-        backgroundSize: 'cover', backgroundPosition: 'center 30%',
-        padding: '34px 24px 30px', position: 'relative', overflow: 'hidden',
-        borderBottom: '1px solid rgba(200,168,75,0.2)',
-        boxShadow: '0 4px 24px rgba(0,0,0,0.2)',
-      }}>
-        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: 'linear-gradient(90deg, transparent, #C8A84B 20%, #E0C870 50%, #C8A84B 80%, transparent)' }} />
-        <IslamicPattern />
-        <div style={{ maxWidth: 820, margin: '0 auto', position: 'relative', zIndex: 1 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-            <div style={{ height: 1, width: 18, background: 'rgba(200,168,75,0.5)' }} />
-            <svg width="7" height="7" viewBox="0 0 20 20"><polygon points="10,1 12,8 19,8 13,12 15,19 10,15 5,19 7,12 1,8 8,8" fill="#C8A84B" /></svg>
-            <div style={{ height: 1, width: 18, background: 'rgba(200,168,75,0.5)' }} />
-          </div>
-          <div style={{ borderLeft: '3px solid rgba(200,168,75,0.75)', paddingLeft: 16 }}>
-            <h1 style={{ fontFamily: "'Cairo', sans-serif", fontSize: 'clamp(22px,4vw,34px)', fontWeight: 700, color: '#F5F0E2', margin: '0 0 7px', letterSpacing: '-0.01em' }}>
-              {t('qibla_extra.hero_title')}
-            </h1>
-            <p style={{ color: 'rgba(168,196,176,0.85)', fontSize: 13.5, margin: 0, maxWidth: 480 }}>
-              {t('qibla_extra.hero_subtitle')}
-            </p>
-          </div>
-        </div>
-      </div>
+      <PageBanner
+        title={t('qibla_extra.hero_title')}
+        subtitle={t('qibla_extra.hero_subtitle')}
+      />
 
-      <div style={{ maxWidth: 820, margin: '0 auto', padding: '28px 20px 60px' }}>
+      <div style={{ padding: '0 0 40px' }}>
 
         {/* ── COMPASS CARD ─────────────────────────────────────────────────── */}
         <div style={{ ...card(), padding: '28px 32px', marginBottom: 18 }}>

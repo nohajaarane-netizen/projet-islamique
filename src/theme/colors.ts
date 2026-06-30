@@ -4,7 +4,7 @@ export const lightTheme = {
   sidebar:      "#1B3828",        // vert forêt profond
   sidebarBorder:"rgba(255,255,255,0.08)",
   cardBg:       "#FFFFFF",
-  cardBg2:      "#FDF0E0",
+  cardBg2:      "#F5ECD2",        // or clair doux (harmonisé avec le thème)
   textDark:     "#161510",        // quasi-noir chaud
   textMid:      "#58564E",
   textLight:    "#9A9789",

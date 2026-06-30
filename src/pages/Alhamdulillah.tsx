@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../context/ThemeContext';
 import { lightTheme, darkTheme } from '../theme/colors';
+import PageBanner from '../components/layout/PageBanner';
 import { FaTrash, FaHeart, FaRegHeart } from 'react-icons/fa';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -106,45 +107,17 @@ export default function Alhamdulillah() {
   });
 
   return (
-    <div style={{ maxWidth: 780, margin: '0 auto', paddingBottom: 48 }}>
+    <div style={{ paddingBottom: 48 }}>
 
       {/* ── HERO ─────────────────────────────────────────────────────────── */}
-      <div style={{
-        position: 'relative', borderRadius: 20, overflow: 'hidden', marginBottom: 20,
-        backgroundImage: `linear-gradient(145deg, rgba(6,15,10,0.80) 0%, rgba(20,52,34,0.68) 55%, rgba(8,20,14,0.60) 100%), url('/photomosquee.png')`,
-        backgroundSize: 'cover', backgroundPosition: 'center 30%',
-        display: 'flex', flexDirection: 'column', justifyContent: 'flex-start',
-        padding: '28px 34px 24px',
-        border: '1px solid rgba(200,168,75,0.14)',
-        boxShadow: '0 6px 28px rgba(0,0,0,0.22)',
-      }}>
-        <IslamicPattern opacity={0.07} />
-        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, transparent, ${gold}, ${goldLight}, ${gold}, transparent)` }} />
+      <PageBanner
+        marginBottom={20}
+        eyebrow={t('alhamd_extra.journal_label')}
+        title="Alhamdulillah"
+        subtitle={t('alhamd_extra.quote')}
+      />
 
-        <div style={{ position: 'relative' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-            <div style={{ height: 1, width: 18, background: 'rgba(200,168,75,0.5)' }} />
-            <svg width="7" height="7" viewBox="0 0 20 20">
-              <polygon points="10,1 12,8 19,8 13,12 15,19 10,15 5,19 7,12 1,8 8,8" fill={gold} />
-            </svg>
-            <div style={{ height: 1, width: 18, background: 'rgba(200,168,75,0.5)' }} />
-          </div>
-          <div style={{ borderLeft: `3px solid rgba(200,168,75,0.75)`, paddingLeft: 16 }}>
-            <span style={{ fontSize: 10, color: 'rgba(224,200,112,0.8)', letterSpacing: '0.2em', textTransform: 'uppercase', fontWeight: 600, display: 'block', marginBottom: 6 }}>
-              {t('alhamd_extra.journal_label')}
-            </span>
-            <p style={{ margin: '0 0 4px', fontFamily: "'Cairo', sans-serif", fontSize: 'clamp(22px,4vw,32px)', color: goldLight, direction: 'rtl', lineHeight: 1.4 }}>
-              الْحَمْدُ لِلَّهِ
-            </p>
-            <h1 style={{ margin: '0 0 6px', fontSize: 'clamp(18px,3vw,26px)', fontWeight: 700, color: '#fff', fontFamily: "'Cairo', sans-serif", letterSpacing: '-0.01em' }}>
-              Alhamdulillah
-            </h1>
-            <p style={{ margin: 0, fontSize: 12.5, color: 'rgba(255,255,255,0.5)' }}>
-              {t('alhamd_extra.quote')}
-            </p>
-          </div>
-        </div>
-      </div>
+      <div>
 
       {/* ── QURANIC VERSE ─────────────────────────────────────────────────── */}
       <div style={{
@@ -376,6 +349,7 @@ export default function Alhamdulillah() {
             </div>
           ))}
         </div>
+      </div>
       </div>
     </div>
   );

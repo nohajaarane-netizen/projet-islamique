@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../context/ThemeContext';
 import { lightTheme, darkTheme } from '../theme/colors';
+import PageBanner from '../components/layout/PageBanner';
 import { FaHeart, FaRegHeart, FaCopy, FaBookmark, FaRegBookmark } from 'react-icons/fa';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -205,42 +206,16 @@ export default function HadithDua() {
   );
 
   return (
-    <div style={{ maxWidth: 860, margin: '0 auto', paddingBottom: 48 }}>
+    <div style={{ paddingBottom: 48 }}>
 
       {/* ── HERO ─────────────────────────────────────────────────────────── */}
-      <div style={{
-        position: 'relative', borderRadius: 20, overflow: 'hidden', marginBottom: 24,
-        backgroundImage: `linear-gradient(145deg, rgba(6,15,10,0.80) 0%, rgba(18,48,30,0.68) 50%, rgba(8,20,14,0.60) 100%), url('/photomosquee.png')`,
-        backgroundSize: 'cover', backgroundPosition: 'center 30%',
-        display: 'flex', flexDirection: 'column', justifyContent: 'flex-start',
-        padding: '28px 36px 24px',
-        border: '1px solid rgba(200,168,75,0.14)',
-        boxShadow: '0 6px 28px rgba(0,0,0,0.22)',
-      }}>
-        <IslamicPattern opacity={0.07} color={gold} />
-        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, transparent, ${gold}, ${goldLight}, ${gold}, transparent)` }} />
+      <PageBanner
+        eyebrow={t('hadith_extra.prophetic_label')}
+        title="Hadith & Du'a"
+        subtitle={t('hadith_extra.subtitle_hero')}
+      />
 
-        <div style={{ position: 'relative' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-            <div style={{ height: 1, width: 18, background: 'rgba(200,168,75,0.5)' }} />
-            <svg width="7" height="7" viewBox="0 0 20 20">
-              <polygon points="10,1 12,8 19,8 13,12 15,19 10,15 5,19 7,12 1,8 8,8" fill={gold} />
-            </svg>
-            <div style={{ height: 1, width: 18, background: 'rgba(200,168,75,0.5)' }} />
-          </div>
-          <div style={{ borderLeft: `3px solid rgba(200,168,75,0.75)`, paddingLeft: 16 }}>
-            <span style={{ fontSize: 10, color: 'rgba(224,200,112,0.8)', letterSpacing: '0.2em', textTransform: 'uppercase', fontWeight: 600, display: 'block', marginBottom: 6 }}>
-              {t('hadith_extra.prophetic_label')}
-            </span>
-            <h1 style={{ margin: '0 0 8px', fontSize: 'clamp(22px,4vw,32px)', fontWeight: 700, color: '#fff', fontFamily: "'Cairo', sans-serif", letterSpacing: '-0.01em' }}>
-              Hadith &amp; Du'a
-            </h1>
-            <p style={{ margin: 0, fontSize: 13, color: 'rgba(255,255,255,0.55)', lineHeight: 1.6, maxWidth: 480 }}>
-              {t('hadith_extra.subtitle_hero')}
-            </p>
-          </div>
-        </div>
-      </div>
+      <div>
 
       <div style={{ padding: '0 2px' }}>
 
@@ -378,6 +353,7 @@ export default function HadithDua() {
               </div>
             : filteredDuas.map(d => renderCard(d))
         )}
+      </div>
       </div>
     </div>
   );

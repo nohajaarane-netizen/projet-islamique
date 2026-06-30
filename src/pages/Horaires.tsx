@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 import { useTheme } from '../context/ThemeContext';
 import { lightTheme, darkTheme } from '../theme/colors';
+import PageBanner from '../components/layout/PageBanner';
 import { FaMapMarkerAlt, FaExclamationTriangle, FaCalendarAlt, FaSyncAlt } from 'react-icons/fa';
 import { BsSunrise, BsSun, BsCloudSun, BsSunset, BsMoonStars } from 'react-icons/bs';
 import { GiSamaraMosque } from 'react-icons/gi';
@@ -45,6 +46,16 @@ const WEEKDAY_I18N_KEY: Record<string, string> = {
   Thursday: 'days.thursday', Friday: 'days.friday', Saturday: 'days.saturday',
   Sunday: 'days.sunday',
 };
+
+// L'API Aladhan renvoie chaque jour sous la forme { timings, date: { gregorian, hijri } }.
+// On aplatit cette structure pour correspondre à l'interface DaySchedule (gregorian/hijri à la racine).
+const mapCalendarDays = (raw: any[]): DaySchedule[] =>
+  (raw || []).map((d: any) => ({
+    date: d?.date?.gregorian?.date || '',
+    gregorian: d?.date?.gregorian || { date: '', weekday: { en: '' } },
+    hijri: d?.date?.hijri || { date: '' },
+    timings: d?.timings,
+  }));
 const HIJRI_MONTHS_AR: Record<string, string> = {
   '01':'مُحَرَّم','02':'صَفَر','03':'رَبِيعُ الْأَوَّل','04':'رَبِيعُ الثَّانِي',
   '05':'جُمَادَى الأُولَى','06':'جُمَادَى الآخِرَة','07':'رَجَب','08':'شَعْبَان',
@@ -199,7 +210,7 @@ const Horaires: React.FC = () => {
         setLoadingMonthView(true);
         const params = `latitude=${geo.lat}&longitude=${geo.lng}&method=4`;
         const res = await axios.get(`https://api.aladhan.com/v1/calendar/${viewYear}/${viewMonth}?${params}`);
-        if (!ignore) setViewMonthData(res.data.data || []);
+        if (!ignore) setViewMonthData(mapCalendarDays(res.data.data));
       } catch { /* silently ignore */ }
       finally { if (!ignore) setLoadingMonthView(false); }
     })();
@@ -226,7 +237,7 @@ const Horaires: React.FC = () => {
           setHijriRaw(todayRes.data.data.date.hijri.date);
           setGregorianRaw(todayRes.data.data.date.gregorian.date);
           setWeekday(todayRes.data.data.date.gregorian.weekday.en);
-          setMonthData(monthRes.data.data || []);
+          setMonthData(mapCalendarDays(monthRes.data.data));
         }
       } catch {
         if (!ignore) setError(t('horaires.error'));
@@ -315,7 +326,7 @@ const Horaires: React.FC = () => {
     ? displayData.filter(day => parseInt(day.gregorian?.date?.split('-')[0] || '0', 10) >= todayNum)
     : displayData;
 
-  const visibleDays = showFullMonth ? daysFromToday : daysFromToday.slice(0, 10);
+  const visibleDays = showFullMonth ? daysFromToday : daysFromToday.slice(0, 7);
   const locLabel = geo.city ? `${geo.city}${geo.country ? ', ' + geo.country : ''}` : 'Ma position';
 
   const cdownH = Math.floor(secsLeft / 3600);
@@ -334,62 +345,30 @@ const Horaires: React.FC = () => {
     <div style={{ maxWidth: 820, margin: '0 auto', paddingBottom: 52 }}>
 
       {/* ── HERO ─────────────────────────────────────────────────────────────── */}
-      <div style={{
-        borderRadius: 20, overflow: 'hidden', marginBottom: 20, position: 'relative',
-        backgroundImage: `linear-gradient(145deg, rgba(6,15,10,0.80) 0%, rgba(18,48,30,0.68) 55%, rgba(8,20,14,0.60) 100%), url('/photomosquee.png')`,
-        backgroundSize: 'cover', backgroundPosition: 'center 30%',
-        display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', padding: '28px 32px 24px',
-        border: '1px solid rgba(200,168,75,0.14)',
-        boxShadow: '0 6px 28px rgba(0,0,0,0.22)',
-      }}>
-        <IslamicPattern opacity={0.07} />
-        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, transparent, ${gold}, ${goldLight}, ${gold}, transparent)` }} />
-
-        {/* Location badge */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 18 }}>
+      <PageBanner
+        marginBottom={20}
+        eyebrow={t(WEEKDAY_I18N_KEY[weekday] || 'days.monday') || weekday}
+        title={t('horaires.title')}
+        subtitle={nextInfo
+          ? `${t('next_prayer')} · ${PRAYER_ARABIC[nextInfo.key]} ${prayerMeta[nextInfo.key].label} — ${padZ(cdownH)}:${padZ(cdownM)}:${padZ(cdownS)}`
+          : undefined}
+        badge={
           <div style={{
             display: 'flex', alignItems: 'center', gap: 6,
             background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)',
-            borderRadius: 20, padding: '4px 12px', backdropFilter: 'blur(8px)',
+            borderRadius: 20, padding: '5px 13px', backdropFilter: 'blur(8px)',
           }}>
             <FaMapMarkerAlt style={{ fontSize: 12, color: goldLight }} />
             <span style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.85)', fontWeight: 600 }}>{locLabel}</span>
             {geo.status === 'denied' && (
               <button onClick={requestLocation} title={t('horaires_extra.retry')}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: goldLight, fontSize: 11, padding: 0, marginLeft: 4 }}>
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: goldLight, fontSize: 11, padding: 0, marginInlineStart: 4 }}>
                 ↺
               </button>
             )}
           </div>
-        </div>
-
-        <div style={{ position: 'relative' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-            <div style={{ height: 1, width: 18, background: 'rgba(200,168,75,0.5)' }} />
-            <svg width="7" height="7" viewBox="0 0 20 20"><polygon points="10,1 12,8 19,8 13,12 15,19 10,15 5,19 7,12 1,8 8,8" fill="#C8A84B" /></svg>
-            <div style={{ height: 1, width: 18, background: 'rgba(200,168,75,0.5)' }} />
-          </div>
-          <div style={{ borderLeft: `3px solid rgba(200,168,75,0.75)`, paddingLeft: 14 }}>
-            <p style={{ margin: '0 0 3px', fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgba(224,200,112,0.8)', fontWeight: 600 }}>
-              {t(WEEKDAY_I18N_KEY[weekday] || 'days.monday') || weekday}
-            </p>
-            <h1 style={{ margin: '0 0 4px', fontSize: 'clamp(22px,4vw,32px)', fontWeight: 800, color: '#FFF', letterSpacing: '-0.02em' }}>
-              {t('horaires.title')}
-            </h1>
-
-            {/* Countdown to next prayer */}
-            {nextInfo && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 8 }}>
-                <span style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.5)' }}>{t('next_prayer')} ·</span>
-                <span style={{ fontSize: 13, fontWeight: 700, color: goldLight }}>{PRAYER_ARABIC[nextInfo.key]} {prayerMeta[nextInfo.key].label}</span>
-                <span style={{ fontSize: 12.5, fontWeight: 700, color: gold, fontVariantNumeric: 'tabular-nums', background: 'rgba(200,168,75,0.12)', border: '1px solid rgba(200,168,75,0.25)', borderRadius: 8, padding: '3px 10px' }}>
-                  {padZ(cdownH)}:{padZ(cdownM)}:{padZ(cdownS)}
-                </span>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
+        }
+      />
 
       {/* ── DATE CARDS ───────────────────────────────────────────────────────── */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 20 }}>
@@ -596,7 +575,7 @@ const Horaires: React.FC = () => {
                 fontFamily: "'Cairo', sans-serif", transition: 'all 0.18s',
               }}
             >
-              {t('horaires_extra.today') || "Aujourd'hui"}
+              {t('horaires_extra.today_label')}
             </button>
 
             <button
@@ -606,9 +585,19 @@ const Horaires: React.FC = () => {
               onMouseLeave={e => { e.currentTarget.style.borderColor = isDark ? 'rgba(255,255,255,0.12)' : '#e0dbd0'; e.currentTarget.style.color = C.textMid; }}
             >›</button>
 
-            <div style={{ width: 34, height: 34, borderRadius: 10, border: `1px solid ${isDark ? 'rgba(255,255,255,0.12)' : '#e0dbd0'}`, background: isDark ? 'rgba(255,255,255,0.04)' : '#faf8f3', display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.textMid }}>
+            <button
+              onClick={() => setShowFullMonth(v => !v)}
+              title={showFullMonth ? t('horaires_extra.show_less') : t('horaires_extra.show_month')}
+              style={{ width: 34, height: 34, borderRadius: 10, cursor: 'pointer',
+                border: `1px solid ${showFullMonth ? gold : (isDark ? 'rgba(255,255,255,0.12)' : '#e0dbd0')}`,
+                background: showFullMonth ? (isDark ? 'rgba(200,168,75,0.14)' : 'rgba(200,168,75,0.10)') : (isDark ? 'rgba(255,255,255,0.04)' : '#faf8f3'),
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: showFullMonth ? gold : C.textMid, transition: 'all 0.18s' }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = gold; e.currentTarget.style.color = gold; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = showFullMonth ? gold : (isDark ? 'rgba(255,255,255,0.12)' : '#e0dbd0'); e.currentTarget.style.color = showFullMonth ? gold : C.textMid; }}
+            >
               <FaCalendarAlt style={{ fontSize: 13 }} />
-            </div>
+            </button>
           </div>
         </div>
 
@@ -637,8 +626,8 @@ const Horaires: React.FC = () => {
               </thead>
               <tbody>
                 {visibleDays.length === 0 ? (
-                  <tr><td colSpan={6} style={{ padding: '32px', textAlign: 'center', color: C.textLight, fontSize: 13 }}>Aucune donnée disponible</td></tr>
-                ) : visibleDays.map((day) => {
+                  <tr><td colSpan={6} style={{ padding: '28px', textAlign: 'center', color: C.textLight, fontSize: 13 }}>—</td></tr>
+                ) : visibleDays.map((day, idx) => {
                   const gDate  = day.gregorian?.date || '';
                   const dayNum = parseInt(gDate.split('-')[0] || '0', 10);
                   const isToday = isCurrentMonthView && dayNum === todayNum;
@@ -646,30 +635,27 @@ const Horaires: React.FC = () => {
                   const isFri  = day.gregorian?.weekday?.en === 'Friday';
                   const shortMonth = new Date(viewYear, viewMonth - 1, 1)
                     .toLocaleString('fr-FR', { month: 'short' });
+                  const baseBg = isToday
+                    ? (isDark ? 'rgba(200,168,75,0.10)' : '#f6f3ec')
+                    : (idx % 2 === 1 ? (isDark ? 'rgba(255,255,255,0.02)' : '#fbfaf6') : 'transparent');
                   return (
-                    <tr key={gDate} style={{
-                      background: isToday
-                        ? (isDark ? 'rgba(200,168,75,0.07)' : '#f5f3ee')
-                        : 'transparent',
-                      borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.04)' : '#f4f0e6'}`,
-                      transition: 'background 0.15s',
-                    }}
-                    onMouseEnter={e => { if (!isToday) (e.currentTarget as HTMLElement).style.background = isDark ? 'rgba(255,255,255,0.03)' : '#faf9f5'; }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = isToday ? (isDark ? 'rgba(200,168,75,0.07)' : '#f5f3ee') : 'transparent'; }}
+                    <tr key={gDate} style={{ background: baseBg, transition: 'background 0.15s' }}
+                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = isDark ? 'rgba(255,255,255,0.05)' : '#f3efe6'; }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = baseBg; }}
                     >
-                      <td style={{ padding: '13px 24px' }}>
-                        <p style={{ margin: '0 0 2px', fontSize: 13.5, fontWeight: isToday ? 700 : 500, color: isToday ? gold : C.textDark, fontFamily: "'Cairo', sans-serif" }}>
+                      <td style={{ padding: '9px 24px', whiteSpace: 'nowrap' }}>
+                        <span style={{ fontSize: 13.5, fontWeight: isToday ? 700 : 500, color: isToday ? gold : C.textDark, fontFamily: "'Cairo', sans-serif" }}>
                           {dayNum} {shortMonth.charAt(0).toUpperCase() + shortMonth.slice(1)}
-                        </p>
-                        <p style={{ margin: 0, fontSize: 11, color: isFri ? C.green : C.textLight, fontWeight: isFri ? 600 : 400, fontFamily: "'Cairo', sans-serif" }}>
+                        </span>
+                        <span style={{ marginInlineStart: 8, fontSize: 11, color: isFri ? C.green : C.textLight, fontWeight: isFri ? 600 : 400, fontFamily: "'Cairo', sans-serif" }}>
                           {dayName}
-                        </p>
+                        </span>
                       </td>
                       {PRAYERS.map(p => (
                         <td key={p} style={{
-                          padding: '13px 16px', textAlign: 'center',
+                          padding: '9px 16px', textAlign: 'center',
                           fontFamily: "'Cairo', sans-serif",
-                          fontSize: 13.5, fontVariantNumeric: 'tabular-nums',
+                          fontSize: 13, fontVariantNumeric: 'tabular-nums',
                           color: isToday ? C.textDark : C.textMid,
                           fontWeight: isToday ? 600 : 400,
                         }}>
